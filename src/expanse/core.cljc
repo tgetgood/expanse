@@ -1,17 +1,35 @@
 (ns expanse.core
-    (:require ))
-
-(enable-console-print!)
-
-(println "This text is printed from src/expanse/core.cljs. Go ahead and edit it and see reloading in action.")
+  #?@(:clj
+       [(:require
+         [lemonade.core :as l]
+         [lemonade.events :as events]
+         [lemonade.system :as system])]
+       :cljs
+       [(:require
+         [expanse.browser :as browser]
+         [lemonade.core :as l]
+         [lemonade.events :as events]
+         [lemonade.system :as system])]))
 
 ;; define your app data so that it doesn't get over-written on reload
 
 (defonce app-state (atom {:text "Hello world!"}))
 
+(def host
+  #?(:cljs (browser/host)
+     :clj {}))
 
-(defn on-js-reload []
-  ;; optionally touch your app-state to force rerendering depending on
-  ;; your application
-  ;; (swap! app-state update-in [:__figwheel_counter] inc)
-)
+(def set-fullscreen!
+  #?(:cljs browser/fullscreen!
+     :clj (constantly nil)))
+
+(defn on-reload []
+  (set-fullscreen!)
+
+  (system/initialise!
+   {:host    host
+    :app-db  app-state
+    :handler (fn [_] (assoc l/circle :centre [0 0] :radius 300))}))
+
+(defn ^:export init []
+  (on-reload))
