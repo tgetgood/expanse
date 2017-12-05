@@ -33,6 +33,7 @@
     {:id           "min"
      :source-paths ["src"]
      :compiler     {:output-to      "resources/public/js/compiled/expanse.js"
+                    :asset-path     "js/compiled/out"
                     :main           expanse.core
                     :parallel-build true
                     :checked-arrays :warn
