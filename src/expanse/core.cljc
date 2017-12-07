@@ -1,12 +1,15 @@
 (ns expanse.core
-  (:require
-      [lemonade.core :as l]
-      [lemonade.hosts :as hosts]
-      [lemonade.system :as system]))
+  (:require [expanse.fetch :as fetch]
+            [lemonade.core :as l]
+            [lemonade.hosts :as hosts]
+            [lemonade.system :as system]))
 
 ;; define your app data so that it doesn't get over-written on reload
 
+
 (defonce app-state (atom {:text "Hello world!"}))
+
+(fetch/demos #(swap! app-state assoc :raw %))
 
 (def host
   hosts/default-host)
