@@ -1,10 +1,7 @@
 (ns expanse.eval
   (:require [cljs.reader :refer [read-string]]
-            [lemonade.core :as core :refer [text rectangle path arc]
-             :refer-macros [deftemplate]]
             [clojure.string :as string]
-            [eval-soup.core :as eval-soup]
-            ))
+            [eval-soup.core :as eval-soup]))
 
 (defn resolve-ns [s]
   (let [ns-form (read-string s)]
@@ -50,3 +47,7 @@
    eval-soup/state
    eval-ns
    load-fn))
+
+(defn eval-str [s cb]
+  (let [forms (read-all-forms s)]
+    (eval forms cb)))

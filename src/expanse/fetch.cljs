@@ -38,7 +38,7 @@
       fetch
       cb->chan))
 
-(defn demos [cb]
+(defn demos []
   (let [chans  (mapv grab-sources demo-list)
         middle (chan)
         out    (async/into [] middle)]
@@ -49,5 +49,5 @@
             (when-not (nil? v)
               (>! middle v)))
           (recur more)))
-      (async/close! middle)
-      (cb (<! out)))))
+      (async/close! middle))
+    out))
