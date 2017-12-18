@@ -6,8 +6,10 @@
 
   :min-lein-version "2.7.1"
 
-  :dependencies [[org.clojure/clojure "1.9.0-RC2"]
-                 [org.clojure/clojurescript "1.9.946"]]
+  :dependencies [[eval-soup "1.2.3"]
+                 [org.clojure/clojure "1.9.0-RC2"]
+                 [org.clojure/clojurescript "1.9.946"]
+                 [org.clojure/core.async "0.3.465"]]
 
   :plugins [[lein-figwheel "0.5.14"]
             [lein-cljsbuild "1.1.7" :exclusions [org.clojure/clojure]]]
@@ -45,7 +47,6 @@
    :dev  {:dependencies  [[binaryage/devtools "0.9.4"]
                           [org.clojure/spec.alpha "0.1.134"]
                           [org.clojure/tools.namespace "0.2.11"]
-                          [org.clojure/core.async "0.3.465"]
                           [figwheel-sidecar "0.5.14"
                            :exclusions [org.clojure/core.async]]
                           [com.cemerick/piggieback "0.2.2"]

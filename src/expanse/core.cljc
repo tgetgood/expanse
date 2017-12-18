@@ -9,7 +9,7 @@
 
 (defonce app-state (atom {:text "Hello world!"}))
 
-(fetch/demos #(swap! app-state assoc :raw %))
+(fetch/demos #(swap! app-state assoc :sources %))
 
 (def host
   hosts/default-host)

@@ -3,35 +3,51 @@
             [cljs.core.async :as async
              :refer [<! >! put! chan] :refer-macros [go]]
             [goog.object :as obj])
-  (:require-macros [expanse.macros :refer [async await await-all]])
   (:import [goog.net XhrIo]))
 
 (def demo-list
   ;; HACK:
   "hard coded list of demos."
-  ["index.html" "packages/elections-demo.html" "packages/infinite.html"])
+  ["packages/elections-demo" "packages/infinite"])
 
+(enable-console-print!)
 (defn fetch [url]
   (fn [cb]
     (.send XhrIo url (fn [e]
-                       (-> e
-                           .-target
-                           .getResponseText
-                           cb)))))
+                       (if (-> e
+                               .-target
+                               .getStatus
+                               (= 200))
+                         (-> e
+                             .-target
+                             .getResponseText
+                             cb)
+                         (cb nil))))))
 
 (defn cb->chan [f]
   (let [out (chan)]
-    (f #(put! out %))
+    (f (fn [v] (if (nil? v)
+                 (async/close! out)
+                 (put! out v))))
     out))
 
+
+(defn grab-sources [path]
+  (-> path
+      (str "/core.cljc")
+      fetch
+      cb->chan))
+
 (defn demos [cb]
-  (let [chans  (mapv #(cb->chan (fetch %)) demo-list)
+  (let [chans  (mapv grab-sources demo-list)
         middle (chan)
         out    (async/into [] middle)]
     (go
       (loop [[ch & more] chans]
         (when ch
-          (>! middle (<! ch))
+          (let [v (<! ch)]
+            (when-not (nil? v)
+              (>! middle v)))
           (recur more)))
       (async/close! middle)
       (cb (<! out)))))
