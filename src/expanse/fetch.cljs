@@ -1,14 +1,12 @@
 (ns expanse.fetch
-  (:require [cljs.pprint :refer [pprint]]
-            [cljs.core.async :as async
-             :refer [<! >! put! chan] :refer-macros [go]]
-            [goog.object :as obj])
-  (:import [goog.net XhrIo]))
+  (:require [cljs.core.async :as async :refer [<! >! chan put!] :refer-macros [go]]
+            [expanse.eval :as eval])
+  (:import goog.net.XhrIo))
 
 (def demo-list
   ;; HACK:
   "hard coded list of demos."
-  ["packages/elections-demo" "packages/infinite"])
+  ["packages/elections-demo" #_"packages/infinite"])
 
 (enable-console-print!)
 (defn fetch [url]
@@ -51,3 +49,10 @@
           (recur more)))
       (async/close! middle))
     out))
+
+
+(defn source [cb]
+  (go
+    (let [code (first (<! (demos)))
+          ns (eval/resolve-ns code)]
+      (eval/eval-str code #(cb ns %)))))

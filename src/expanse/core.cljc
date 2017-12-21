@@ -1,28 +1,21 @@
 (ns expanse.core
-  #?(:clj (:refer-clojure :exclude [await]))
-  (:require [expanse.eval :as eval]
+  (:require [clojure.pprint :refer [pprint]]
             [expanse.fetch :as fetch]
-            [expanse.async :refer [async await]]
             [lemonade.core :as l]
+            [lemonade.draw :as draw]
             [lemonade.hosts :as hosts]
             [lemonade.system :as system]))
 
-;; define your app data so that it doesn't get over-written on reload
-
-
 (defonce app-state (atom {:text "Hello world!"}))
 
-(defn init-sub [ns vars]
-  (swap! app-state assoc :sub
-         (binding [lemonade.system/initialise! identity]
-           ((symbol ns "init"))))
-  )
+(defn tester-drawer [ns {:keys [handler app-db]}]
+  (system/stop!)
+  (draw/draw! (handler @app-db)))
 
-(defn eval-sources [source]
-  (async
-   (let [code (first (await source))
-         ns (eval/resolve-ns code)]
-     (eval/eval-str code #(init-sub ns %)))))
+(defn init-sub [ns vars]
+  (pprint vars)
+  (binding [lemonade.system/initialise! (partial tester-drawer ns)]
+    #_((last vars))))
 
 (def host
   hosts/default-host)
@@ -33,9 +26,9 @@
   (system/initialise!
    {:host    host
     :app-db  app-state
-    :handler (fn [_] (assoc l/circle :centre [200 100] :radius 300))}
+    :handler (fn [_] (assoc l/circle :centre [200 100] :radius 300))})
 
-   (init-sub "election-demos.core" (eval-sources (fetch/demos)))))
+  (fetch/source init-sub))
 
 (defn ^:export init []
   (on-reload))
