@@ -55,4 +55,5 @@
   (go
     (let [code (first (<! (demos)))
           ns (eval/resolve-ns code)]
-      (eval/eval-str code #(cb ns %)))))
+      (cb code)
+      #_(eval/eval-str code #(cb ns %)))))

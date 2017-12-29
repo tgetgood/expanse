@@ -1,7 +1,119 @@
 (ns expanse.eval
-  (:require [cljs.reader :refer [read-string]]
-            [clojure.string :as string]
-            [eval-soup.core :as eval-soup]))
+  (:require [cljs.core.async :refer [<! >! chan put!] :refer-macros [go]]
+            [cljs.js :refer [empty-state eval js-eval]]
+            [cljs.reader :refer [read-string]]
+            [clojure.string :as string])
+  (:import goog.net.XhrIo))
+
+(set! cljs.js/*eval-fn* cljs.js/js-eval)
+
+(comment
+  "Dummy ns in which to eval things. Not sure what the point of this is...")
+(defonce eval-ns
+  (do (create-ns 'expanse.eval.evaluation)
+      'expanse.eval.evaluation))
+
+(def root-path "/js/compiled/out/")
+
+(defn- with-root-path [opts]
+  (update opts :path #(str root-path %)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Copied (and modified) eval-soup code
+;;;;; https://github.com/oakes/eval-soup
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defonce state (empty-state))
+
+(defn fix-goog-path [path]
+  ; goog/string -> goog/string/string
+  ; goog/string/StringBuffer -> goog/string/stringbuffer
+  (let [parts     (string/split path #"/")
+        last-part (last parts)
+        new-parts (concat
+                   (butlast parts)
+                   (if (= last-part (string/lower-case last-part))
+                     [last-part last-part]
+                     [(string/lower-case last-part)]))]
+    (string/join "/" new-parts)))
+
+(defn custom-load!
+  ([opts cb]
+   (if (re-matches #"^goog/.*" (:path opts))
+     (custom-load!
+       (update opts :path fix-goog-path)
+       [".js"]
+       cb)
+     (custom-load!
+       opts
+       (if (:macros opts)
+         [".cljc" ".clj"]
+         [ ".js" ".cljc" ".cljs"])
+       cb)))
+  ([opts extensions cb]
+   (if-let [extension (first extensions)]
+     (try
+       (.send XhrIo
+         (str (:path opts) extension)
+         (fn [e]
+           (if (.isSuccess (.-target e))
+             (cb {:lang (if (= extension ".js") :js :clj)
+                  :source (.. e -target getResponseText)})
+             (custom-load! opts (rest extensions) cb))))
+       (catch js/Error _
+         (custom-load! opts (rest extensions) cb)))
+     (cb {:lang :clj :source ""}))))
+
+
+(defn eval-wrap [state form opts]
+  (let [channel (chan)]
+    (try
+      (eval state form opts #(put! channel {:wrap (or (:error %) (:value %))}))
+      (catch js/Error e (put! channel {:wrap e})))
+    channel))
+
+(defn eval-forms [forms state opts]
+  (go
+    (loop [forms   forms
+           results []]
+      (if (seq forms)
+        (let [form (first forms)]
+          (if (instance? js/Error form)
+            (recur (rest forms) (conj results {:wrap form}))
+            (recur (rest forms)
+                   (conj results (<! (eval-wrap state form opts))))))
+        (mapv :wrap results)))))
+
+(defn wrap-macroexpand [form]
+  (if (coll? form)
+    (list 'macroexpand (list 'quote form))
+    form))
+
+(defn load-fn [opts cb]
+  (custom-load! (with-root-path opts) cb))
+
+
+(def default-opts
+  {:eval          js-eval
+   :load          load-fn
+   :context       :expr
+   :def-emits-var true})
+
+(defn code->results
+  ([forms]
+   (code->results forms default-opts))
+  ([forms opts]
+   (let [out (chan)]
+     (go
+       (let [mac (map wrap-macroexpand forms)
+             e1 (<! (eval-forms mac state opts))
+             e2 (<! (eval-forms e1 state opts))]
+         (>! out e2)))
+     out)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; And Frog
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn resolve-ns [s]
   (let [ns-form (read-string s)]
@@ -17,78 +129,11 @@
   (let [s' (resolve-ns-keywords s)]
     (read-string (str "[" s' "]"))))
 
-(def eval-ns
-  "Dummy ns in which to eval things. Not sure what the point of this is..."
-  (do (create-ns 'expanse.eval.evaluation)
-      (atom 'expanse.eval.evaluation)))
+(defn eval-file-str [code cb]
+  (let [ns (resolve-ns code)
+        forms (read-all-forms code)]
+    (go
+      (cb (<! (code->results forms (assoc default-opts :ns ns)))))))
 
-(defn- prepend-path [opts]
-  (update opts :path #(str "/js/compiled/out/" %)))
-
-(defn load-fn [opts cb]
-  (if (re-matches #"^goog/.*" (:path opts))
-    (eval-soup/custom-load! (-> opts
-                                (update :path eval-soup/fix-goog-path)
-                                prepend-path)
-                            [".js"]
-                            cb)
-    (eval-soup/custom-load! (prepend-path opts)
-                            (if (:macros opts)
-                              [".cljc" ".clj"]
-                              [".js" ".cljc" ".cljs"])
-                            cb)))
-
-(defn eval [ns forms cb]
-  (eval-soup/eval-forms
-   (map eval-soup/wrap-macroexpand forms)
-   cb
-   eval-soup/state
-   ns
-   load-fn))
-
-(set! cljs.js/*eval-fn* cljs.js/js-eval)
-(defonce state eval-soup/state)
-
-(defn code->results
-  ([code cb]
-   (code->results code cb {}))
-  ([code cb {:keys [custom-load current-ns]
-              :or {custom-load load-fn
-                   current-ns (atom (resolve-ns code))}}]
-   (let [forms (read-all-forms code)
-         eval-cb (fn [results]
-                   (cb results))
-         read-cb (fn [results]
-                   (eval-soup/eval-forms
-                    (eval-soup/add-timeouts-if-necessary forms results)
-                     eval-cb
-                     state
-                     current-ns
-                     custom-load))
-         init-cb (fn [results]
-                   (eval-soup/eval-forms
-                    forms
-                    read-cb
-                    state
-                    current-ns
-                    custom-load))]
-     (eval-soup/eval-forms
-      ['(ns cljs.user)
-       '(def ps-last-time (atom 0))
-       '(defn ps-reset-timeout! []
-          (reset! ps-last-time (.getTime (js/Date.))))
-       '(defn ps-check-for-timeout! []
-          (when (> (- (.getTime (js/Date.)) @ps-last-time) 5000)
-            (throw (js/Error. "Execution timed out."))))
-       '(set! *print-err-fn* (fn [_]))
-       (list 'ns @current-ns)]
-      init-cb
-      state
-      current-ns
-      custom-load))))
-
-(defn eval-str
-  "Evaluates the string content of a clojure file. Returns a vector of evaluated
-  forms with the var init last in the list. This is a kludge to load the file."
-  [s cb]
-  (code->results s cb))
+;; (def t (:code @expanse.core/app-state))
+;; (def forms (read-all-forms t))

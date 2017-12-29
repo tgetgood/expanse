@@ -12,10 +12,11 @@
   (system/stop!)
   (draw/draw! (handler @app-db)))
 
-(defn init-sub [ns vars]
-  (pprint vars)
-  (binding [lemonade.system/initialise! (partial tester-drawer ns)]
-    #_((last vars))))
+
+(defn init-sub [code]
+  (swap! app-state assoc :code code)
+  #_(binding [lemonade.system/initialise! (partial tester-drawer ns)]
+    (elections-demo.core/init!)))
 
 (def host
   hosts/default-host)

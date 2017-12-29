@@ -1,10 +1,10 @@
-#+TITLE: expanse
+#+TITLE: Macro Expanse
 
-FIXME: Write a one-line description of your library/project.
+Browser and evaluator of lemonade projects.
 
 * Overview
 
-FIXME: Write a paragraph about the library/project and highlight its goals.
+
 
 * Setup
 
