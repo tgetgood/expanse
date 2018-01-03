@@ -7,20 +7,20 @@
   :min-lein-version "2.7.1"
 
   :dependencies [[eval-soup "1.2.3"]
-                 [org.clojure/clojure "1.9.0-RC2"]
+                 [org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.9.946"]
                  [org.clojure/core.async "0.3.465"]]
 
   :plugins [[lein-figwheel "0.5.14"]
             [lein-cljsbuild "1.1.7" :exclusions [org.clojure/clojure]]]
 
-  :source-paths ["src"]
+  :source-paths ["src"
+                 "examples/elections-demo/src"]
 
   :cljsbuild
   {:builds
    [{:id           "dev"
-     :source-paths ["src"
-                    "examples/elections-demo/src"]
+     :source-paths ["src"]
 
      :figwheel     {:on-jsload "expanse.core/on-reload"}
 

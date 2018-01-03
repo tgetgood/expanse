@@ -1,6 +1,8 @@
-(ns expanse.fetch)
+(ns expanse.fetch
+  (:require elections-demo.core))
+
 
 (def demo-list
   ;; HACK:
   "hard coded list of demo init fns"
-  [elections-demos.core/init])
+  [elections-demo.core/init])
