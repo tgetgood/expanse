@@ -1,6 +1,5 @@
 (ns expanse.core
-  (:require [clojure.pprint :refer [pprint]]
-            [expanse.fetch :as fetch]
+  (:require [expanse.fetch :as fetch]
             [lemonade.core :as l]
             [lemonade.draw :as draw]
             [lemonade.hosts :as hosts]
@@ -12,11 +11,9 @@
   (system/stop!)
   (draw/draw! (handler @app-db)))
 
-
 (defn init-sub [code]
-  (swap! app-state assoc :code code)
-  #_(binding [lemonade.system/initialise! (partial tester-drawer ns)]
-    (elections-demo.core/init!)))
+  (binding [lemonade.system/initialise! (partial tester-drawer ns)]
+    ))
 
 (def host
   hosts/default-host)

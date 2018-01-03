@@ -19,7 +19,8 @@
   :cljsbuild
   {:builds
    [{:id           "dev"
-     :source-paths ["src"]
+     :source-paths ["src"
+                    "examples/elections-demo/src"]
 
      :figwheel     {:on-jsload "expanse.core/on-reload"}
 
@@ -52,7 +53,10 @@
                           [com.cemerick/piggieback "0.2.2"]
                           [org.clojure/test.check "0.9.0"]]
           ;; need to add dev source path here to get user.clj loaded
-          :source-paths  ["src" "dev" "../lemonade/src"]
+          :source-paths  ["src"
+                          "dev"
+                          "../lemonade/src"
+                          "examples/elections-demo/src"]
 
           :repl-options  {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
           ;; need to add the compliled assets to the :clean-targets
