@@ -20,7 +20,7 @@
   :cljsbuild
   {:builds
    [{:id           "dev"
-     :source-paths ["src"]
+     :source-paths ["src" "examples/elections-demo/src" "../lemonade/src"]
 
      :figwheel     {:on-jsload "expanse.core/on-reload"}
 
@@ -34,7 +34,7 @@
                     :preloads             [devtools.preload]}}
 
     {:id           "min"
-     :source-paths ["src"]
+     :source-paths ["src" "examples/elections-demo/src"]
      :compiler     {:output-to      "resources/public/js/compiled/expanse.js"
                     :asset-path     "js/compiled/out"
                     :main           expanse.core

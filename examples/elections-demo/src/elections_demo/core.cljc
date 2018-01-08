@@ -1,9 +1,11 @@
 (ns elections-demo.core
   (:require
-      [lemonade.core :as core :refer [line scale translate with-style]]
-      [lemonade.hosts :as hosts]
-      [lemonade.math :as math]
-      [lemonade.system :as system]))
+   [lemonade.core :as core :refer [line scale translate with-style]]
+   [lemonade.hosts :as hosts]
+   [lemonade.math :as math]
+   [lemonade.system :as system]
+   [lemonade.window :as window]
+   [lemonade.events.hlei :as hlei]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Example Data
@@ -260,6 +262,9 @@
    (-> [(title "With Abstentions") (summary (apv data proportions))]
         (translate [0 1200]))])
 
+(defn election-handler [state]
+  (election (:election-data state)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Pies
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -341,16 +346,19 @@
 (defn ring-example-handler [{:keys [election-data]}]
   (ring-example election-data))
 
-(defonce app-db (atom {:election-data election-data}))
-
 (def host hosts/default-host)
 
-(defn on-reload []
+(defn init! [handler]
   (system/fullscreen host)
   (system/initialise!
    {:host host
-    :handler ring-example-handler
-    :app-db app-db}))
+    :handler (-> handler
+                 #_window/wrap-windowing
+                 #_hlei/wrap)
+    :app-db (atom {:election-data election-data})}))
 
-(defn ^:export init []
-  (on-reload))
+(defn ^:export init-circles []
+  (init! ring-example-handler))
+
+(defn ^:export init-histogram []
+  (init! election-handler))
