@@ -262,8 +262,13 @@
    (-> [(title "With Abstentions") (summary (apv data proportions))]
         (translate [0 1200]))])
 
+;; TODO: There's got to be some way to scale an image to the screen
 (defn election-handler [state]
-  (election (:election-data state)))
+  (-> state
+      ::election-data
+      election
+      (scale (/ 4 7))
+      (translate [400 80])))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Pies
@@ -340,10 +345,10 @@
 (defn ring-example [election-data]
   (->
    (recursive-rings election-data proportions (keys election-data))
-   (scale 30)
-   (translate [400 300])))
+   (scale 65)
+   (translate [700 550])))
 
-(defn ring-example-handler [{:keys [election-data]}]
+(defn ring-example-handler [{:keys [::election-data]}]
   (ring-example election-data))
 
 (def host hosts/default-host)
@@ -353,9 +358,9 @@
   (system/initialise!
    {:host host
     :handler (-> handler
-                 #_window/wrap-windowing
-                 #_hlei/wrap)
-    :app-db (atom {:election-data election-data})}))
+                 window/wrap-windowing
+                 hlei/wrap)
+    :app-db (atom {::election-data election-data})}))
 
 (defn ^:export init-circles []
   (init! ring-example-handler))

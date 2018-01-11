@@ -55,6 +55,11 @@ get live reloading, nor a REPL.
 	 orthocentre/bounding box?
 
 	 Should a drawing just come with a bounding box annotation?
+
+	 Well, let's not forget that we have full geometric info on images. We know
+	 from the image data, how many pixels it will span. If the image is assumed to
+	 be finite, scaling the entire thing to the screen size is trivial. That
+	 should be the next line of inquiry.
 ** Masking
 	 If a drawing is infinite, or just too big, how do we make sure it's
 	 restricted appropriately? Lemonade currently has no concept of negative
