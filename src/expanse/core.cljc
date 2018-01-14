@@ -37,9 +37,8 @@
   {:host    host
    :app-db  app-state
    :handler (-> handler
-                ;; window/wrap-windowing
-                ;; hlei/wrap
-                )})
+                window/wrap-windowing
+                hlei/wrap)})
 
 (defn data-init! []
   (binding [lemonade.system/initialise! identity]

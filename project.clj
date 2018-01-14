@@ -15,12 +15,18 @@
             [lein-cljsbuild "1.1.7" :exclusions [org.clojure/clojure]]]
 
   :source-paths ["src"
-                 "examples/elections-demo/src"]
+                 "examples/elections-demo/src"
+                 "examples/basic/src"
+                 "examples/infinite/src"]
 
   :cljsbuild
   {:builds
    [{:id           "dev"
-     :source-paths ["src" "examples/elections-demo/src" "../lemonade/src"]
+     :source-paths ["src"
+                    "../lemonade/src"
+                    "examples/elections-demo/src"
+                    "examples/basic/src"
+                    "examples/infinite/src"]
 
      :figwheel     {:on-jsload "expanse.core/on-reload"}
 
@@ -34,7 +40,10 @@
                     :preloads             [devtools.preload]}}
 
     {:id           "min"
-     :source-paths ["src" "examples/elections-demo/src"]
+     :source-paths ["src"
+                    "examples/elections-demo/src"
+                    "examples/basic/src"
+                    "examples/infinite/src"]
      :compiler     {:output-to      "resources/public/js/compiled/expanse.js"
                     :asset-path     "js/compiled/out"
                     :main           expanse.core
@@ -56,6 +65,8 @@
           :source-paths  ["src"
                           "dev"
                           "../lemonade/src"
+                          "examples/basic/src"
+                          "examples/infinite/src"
                           "examples/elections-demo/src"]
 
           :repl-options  {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}

@@ -357,7 +357,8 @@
   (system/fullscreen host)
   (system/initialise!
    {:host host
-    :handler (-> handler
+    :handler handler
+    :behaviour #(-> %
                  window/wrap-windowing
                  hlei/wrap)
     :app-db (atom {::election-data election-data})}))
