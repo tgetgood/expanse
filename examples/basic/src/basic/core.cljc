@@ -10,9 +10,6 @@
 
 (def host hosts/default-host)
 
-(defonce app-db (atom {:text "Almost Useless"
-                       :count 3}))
-
 (def ex
   [(-> l/polyline
        (assoc :points [[0 0] [100 100] [300 100] [100 300] [0 0]]
@@ -32,17 +29,20 @@
 
    (l/scale l/circle [4000 500])])
 
-(defn image-fn [state] ex)
-
 (defn on-reload []
   (system/fullscreen host)
   (system/initialise!
    {:host      host
-    :handler   image-fn
+    :handler   (constantly ex)
     :behaviour #(-> %
                     window/wrap-windowing
                     hlei/wrap)
-    :app-db    app-db}))
+    ;; TODO: State should be optional.
+    ;; Though at the same time if you don't have any state, why are you using
+    ;; the system instead of basic draw!?
+    ;; Well for the simplicity of having one API
+    ;; Does that justify it?
+    :app-db    (atom {})}))
 
 (defn ^:export init []
   (on-reload))
