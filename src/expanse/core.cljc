@@ -20,11 +20,12 @@
         sf 0.75]
     (map-indexed
      (fn [i handler]
-       (-> [(handler state)
+       (-> [(l/frame {:corner [0 0] :width width :height height} (handler state))
             (assoc l/rectangle :height height :width width)]
            (l/scale sf)
            (l/translate [(* (- 1 sf) width)
                          (- (/ (* (- 1 sf) height) 2) (* i height sf))])))
+
      (:examples state))))
 
 (defn handler [state]

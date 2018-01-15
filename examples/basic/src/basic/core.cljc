@@ -16,21 +16,18 @@
 (def ex
   [(-> l/polyline
        (assoc :points [[0 0] [100 100] [300 100] [100 300] [0 0]]
-              :style {:stroke {:corners :square
-                               :colour  :cyan}
+              :style {:stroke :cyan
                       :fill   :purple})
        (l/scale 3)
        (l/rotate 20)
        (l/translate [300 40]))
    (assoc l/line :from [800 100] :to [900 100])
-   (l/with-style {:fill   :pink
-                     :stroke {:colour :blue}}
+   (l/with-style {:fill :pink}
      (-> l/annulus
          (assoc :outer-radius 300
                 :inner-radius 200
                 :style {:fill   :red
-
-                        :stroke :pink})
+                        :stroke :blue})
          (l/translate [500 500])))
 
    (l/scale l/circle [4000 500])])
