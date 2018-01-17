@@ -30,19 +30,14 @@
    (l/scale l/circle [4000 500])])
 
 (defn on-reload []
-  (system/fullscreen host)
+  ;; REVIEW: Using a draw loop to draw a static image. Wasteful (a little) &
+  ;; confusing that you have to wrap the static image in an fn. What to do with
+  ;; static images? Stateless animations?
   (system/initialise!
    {:host      host
+    :size      :fullscreen
     :handler   (constantly ex)
-    :behaviour #(-> %
-                    window/wrap-windowing
-                    hlei/wrap)
-    ;; TODO: State should be optional.
-    ;; Though at the same time if you don't have any state, why are you using
-    ;; the system instead of basic draw!?
-    ;; Well for the simplicity of having one API
-    ;; Does that justify it?
-    :app-db    (atom {})}))
+    :behaviour (comp hlei/wrap window/wrap-windowing)}))
 
 (defn ^:export init []
   (on-reload))

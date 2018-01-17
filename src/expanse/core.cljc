@@ -8,6 +8,50 @@
 
 #?(:cljs (enable-console-print!))
 
+(def scroll-handler
+  #:lemonade.events
+  {:scroll (fn [{:keys [dy]}]
+             {:mutation [update ::scroll + dy]})})
+
+(defn scroll-wrap [render]
+  (fn [state]
+    (assoc
+     (l/translate (render state) [0 (::scroll state)])
+     :lemonade.events/handlers scroll-handler)))
+
+(def click-handler
+  #:lemonade.events
+  {:left-click
+   (fn [{[x y] :location}]
+     {:mutation
+      [(fn [state]
+         ;; REVIEW: This is duplicating the geometry calculation that laid out
+         ;; the screen in the first place. This is basically a form of path
+         ;; dependence but even worse.
+         ;;
+         ;; So we really do want to be able to attach behaviour to the vos at
+         ;; vaious points in the tree. In this case we want to give each example
+         ;; pane metadata (whatever it needs to set itself as main) and then
+         ;; have some generic logic call the handler with the pane in which the
+         ;; event takes place.
+         ;;
+         ;; So here's another thing the DOM does well enough that I need to
+         ;; replicate it.
+         (let [width (-> state :lemonade.core/window :width)
+               frame-width 500
+               n (max 1 (quot width frame-width))
+               dim (quot width n)
+               i (+ (quot x dim) (* n (quot y dim)))]
+           (println [y (:scroll state)])
+           (-> state
+               (update :current (fn [c] (if c nil (when (<= 0 i 3) i))))
+               (update :lemonade.core/window assoc :zoom 0 :offset [0 0]))))]})})
+
+(defn click-wrap [render]
+  (fn [state]
+    (assoc (l/composite {} [(render state)])
+           :lemonade.events/handlers click-handler)))
+
 (defonce app-state (atom {:examples []}))
 
 (def ratio 1.9)
@@ -15,41 +59,62 @@
 (def host
   hosts/default-host)
 
+(defn frames [n dim]
+  (map (fn [i]
+         [(* dim (mod i n)) (* -1 dim (quot i n))])
+       (range)))
+
 (defn panes [state]
   (let [{:keys [height width]} (:lemonade.core/window state)
-        sf 0.75]
-    (map-indexed
-     (fn [i handler]
-       (-> [(l/frame {:corner [0 0] :width width :height height} (handler state))
-            (assoc l/rectangle :height height :width width)]
-           (l/scale sf)
-           (l/translate [(* (- 1 sf) width)
-                         (- (/ (* (- 1 sf) height) 2) (* i height sf))])))
+        frame-width 500
+        cut 1300
+        n (max 1 (quot width frame-width))
+        dim (quot width n)
+        offsets (frames n dim)
+        sf (/ dim width)]
+    (->
+     (map (fn [offset {:keys [handler]}]
+            (-> [(l/scale (assoc l/frame :width cut :height cut
+                               :contents (handler state))
+                        (/ width cut))
+                 (assoc l/rectangle :width width :height width)]
+                (l/scale sf)
+                (l/translate offset)))
+          offsets (:examples state))
+     (l/scale 0.96)
+     (l/translate [(/ (* 0.04 width) 2) frame-width]))))
 
-     (:examples state))))
+(declare system)
 
 (defn handler [state]
-  (if-let [c (:current @app-state)]
-    (let [{:keys [handler app-db]} (nth (:examples @app-state) c)]
-      (handler @app-db))
+  ;; HACK: Holy shit is this kludgy. Dynamically swap out the rendering system
+  ;; from inside the handler callback?!?!? Seems to work for the time being
+  (if-let [c (:current state)]
+    (let [{:keys [behaviour handler]} (nth (:examples state) c)]
+      (system/initialise! (assoc system
+                                 :handler #(if (:current %)
+                                             (handler %)
+                                             (do (system/initialise! system) []))
+                                 :behaviour (comp behaviour click-wrap)))
+      ;; Return empty shape.
+      [])
     (panes state)))
 
 (def system
-  {:host    host
-   :app-db  app-state
-   :handler (-> handler
-                window/wrap-windowing
-                hlei/wrap)})
+  {:host      host
+   :size      :fullscreen
+   :app-db    app-state
+   :handler   handler
+   :behaviour (comp hlei/wrap scroll-wrap click-wrap)})
 
 (defn data-init! []
   (binding [lemonade.system/initialise! identity]
     (let [sub-images (mapv (fn [x] (x)) fetch/demo-list)
-          db (apply merge (map deref (map :app-db sub-images)))
+          db (apply merge (map deref (remove nil? (map :app-db sub-images))))
           handlers (map :handler sub-images)]
-      (swap! app-state (fn [old] (merge db old {:examples handlers}))))))
+      (swap! app-state (fn [old] (merge db old {:examples sub-images}))))))
 
 (defn on-reload []
-  (system/fullscreen host)
   (system/initialise! system)
   (data-init!))
 
