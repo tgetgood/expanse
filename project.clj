@@ -1,5 +1,5 @@
 (defproject expanse "0.1.0-SNAPSHOT"
-  :description "Package browser for Lemonade ecosystem."
+  :description "Demo browser for Lemonade ecosystem."
   :url "https://lemonade.macroexpanse.com"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
@@ -53,8 +53,8 @@
                     :pretty-print   false}}]}
 
   :profiles
-  {:prod {:dependencies [[macroexpanse/lemonade "0.1.0"]]}
-   :dev  {:dependencies  [[binaryage/devtools "0.9.4"]
+  {:prod {:dependencies [[macroexpanse/lemonade "0.2.0"]]}
+   :dev  {:dependencies  [[binaryage/devtools "0.9.9"]
                           [org.clojure/spec.alpha "0.1.134"]
                           [org.clojure/tools.namespace "0.2.11"]
                           [figwheel-sidecar "0.5.14"
