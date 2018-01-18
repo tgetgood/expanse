@@ -1,35 +1,51 @@
 #+TITLE: Macro Expanse
 
-Browser and evaluator of lemonade projects.
+Browser (and eventually editor) for [[https://github.com/tgetgood/lemonade][lemonade]] example projects.
+
+Try it at http://l.macroexpanse.com
 
 * Overview
+	Expanse is to be a collection of code examples demonstrating what is currently
+	called lemonade.
 
+	The plan is to compile the example code directly in the browser and embed an
+	editor in the page. However, until that comes to pass you'll need to clone
+	this repo and run figwheel locally, using your editor of choice to play with
+	the code.
 * Setup
+** Check It Out
+	 Go to the list at l.macroexpanse.com or localhost:3449/index.html and scroll
+	 through the examples. Click on an example to open it fullscreen, click again
+	 to go back to the index.
 
-To get an interactive development environment run:
+	 Honestly the online version doesn't do much impressive yet, you're better off
+	 running it in figwheel so you can play with it properly.
+** With Figwheel
+	 Clone the repo and run
 
-		lein figwheel
+	 #+BEGIN_SRC sh
+	 $ lein figwheel
+	 #+END_SRC
 
-and open your browser at [localhost:3449](http://localhost:3449/).
-This will auto compile and send all changes to the browser without the
-need to reload. After the compilation process is complete, you will
-get a Browser Connected REPL. An easy way to try it is:
+	 Open your browser to http://localhost:3449/index.html to see the page.
 
-		(js/alert "Am I connected?")
+	 The example code is in the =examples= dir at the top level. Each example is a
+	 complete clojure project that will run on its own; expanse is just a browser
+	 for them.
 
-and you should see an alert in the browser window.
+	 With the demo running change the drawing code in any of the examples it will
+	 be reloaded almost instantly.
 
-To clean all compiled files:
+	 Tutorial to come.
+** Try Your Own Examples
+	 To create your own example project use the lein template
 
-		lein clean
+	 #+BEGIN_SRC sh
+	 $ lein new lemonade NAME
+	 #+END_SRC
 
-To create a production build run:
-
-		lein do clean, cljsbuild once min
-
-And open your browser in `resources/public/index.html`. You will not
-get live reloading, nor a REPL.
-
+	 Start figwheel in your new project folder and follow the instructions from
+	 the previous step.
 * Dev Notes
 ** Embedding
 	 The current line of thought only allows static images (or animations) to be
@@ -66,6 +82,7 @@ get live reloading, nor a REPL.
 	 space. Is that the right way to get a polite embedding?
 * License
 
-Copyright © 2017 Thomas Getgood
+	Copyright © 2018 Thomas Getgood
 
-Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
+	Distributed under the Eclipse Public License either version 1.0 or (at your
+	option) any later version.
