@@ -8,10 +8,17 @@
 
 #?(:cljs (enable-console-print!))
 
+(defonce app-state (atom {:examples [] ::scroll 500}))
+
+(def host hosts/default-host)
+
 (def scroll-handler
   #:lemonade.events
   {:scroll (fn [{:keys [dy]}]
-             {:mutation [update ::scroll + dy]})})
+             {:mutation [(fn [state]
+                           (let [s (::scroll state)
+                                 c (-> state :examples count)]
+                             (assoc state ::scroll (max 550 (+ s dy)))))]})})
 
 (defn scroll-wrap [render]
   (fn [state]
@@ -37,27 +44,30 @@
          ;;
          ;; So here's another thing the DOM does well enough that I need to
          ;; replicate it.
-         (let [width (-> state :lemonade.core/window :width)
+         (let [{:keys [height width]} (-> state :lemonade.core/window)
+               num-ex (-> state :examples count)
+               scroll (::scroll state)
                frame-width 500
                n (max 1 (quot width frame-width))
-               dim (quot width n)
-               i (+ (quot x dim) (* n (quot y dim)))]
-           (println [y (:scroll state)])
+               dim (min width frame-width)
+               ry (+ (- y) scroll frame-width)
+               ox (/ (- width (* n dim)) 2)
+               rx (- x ox)
+               i (+ (quot rx dim) (* n (quot ry dim)))]
            (-> state
-               (update :current (fn [c] (if c nil (when (<= 0 i 3) i))))
+               (update :current (fn [c]
+                                  (if c
+                                    nil
+                                    (when (and (< 0 ry)
+                                               (< 0 rx (* n dim))
+                                               (< -1 i num-ex))
+                                      i))))
                (update :lemonade.core/window assoc :zoom 0 :offset [0 0]))))]})})
 
 (defn click-wrap [render]
   (fn [state]
     (assoc (l/composite {} [(render state)])
            :lemonade.events/handlers click-handler)))
-
-(defonce app-state (atom {:examples []}))
-
-(def ratio 1.9)
-
-(def host
-  hosts/default-host)
 
 (defn frames [n dim]
   (map (fn [i]
@@ -69,7 +79,7 @@
         frame-width 500
         cut 1300
         n (max 1 (quot width frame-width))
-        dim (quot width n)
+        dim (min width frame-width)
         offsets (frames n dim)
         sf (/ dim width)]
     (->
@@ -81,8 +91,7 @@
                 (l/scale sf)
                 (l/translate offset)))
           offsets (:examples state))
-     (l/scale 0.96)
-     (l/translate [(/ (* 0.04 width) 2) frame-width]))))
+     (l/translate [(/ (- width (* n dim)) 2) 0]))))
 
 (declare system)
 
@@ -105,7 +114,7 @@
    :size      :fullscreen
    :app-db    app-state
    :handler   handler
-   :behaviour (comp hlei/wrap scroll-wrap click-wrap)})
+   :behaviour (comp hlei/wrap click-wrap scroll-wrap)})
 
 (defn data-init! []
   (binding [lemonade.system/initialise! identity]
