@@ -1,4 +1,4 @@
-(defproject expanse "0.1.0-SNAPSHOT"
+(defproject expanse "0.1.0"
   :description "Demo browser for Lemonade ecosystem."
   :url "https://lemonade.macroexpanse.com"
   :license {:name "Eclipse Public License"
