@@ -14,7 +14,7 @@ Browser (and eventually editor) for [[https://github.com/tgetgood/lemonade][lemo
 	the code.
 * Setup
 ** Check It Out
-	 Go to the list on [[https://tgetgood.github.io/expanse/resources/public/index.html][GitHub Pages]] or [[*With%20Figwheel][using Figwheel]] and scroll through the
+	 Go to the list on [[https://tgetgood.github.io/expanse/resources/public/index.html][GitHub Pages]] or using Figwheel and scroll through the
 	 examples. Click on an example to open it fullscreen, click again to go back
 	 to the index.
 
