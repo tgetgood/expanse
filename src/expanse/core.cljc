@@ -97,7 +97,7 @@
 
 (defn handler [state]
   ;; HACK: Holy shit is this kludgy. Dynamically swap out the rendering system
-  ;; from inside the handler callback?!?!? Seems to work for the time being
+  ;; from inside the handler callback?!?!? Seems to work for the time being...
   (if-let [c (:current state)]
     (let [{:keys [behaviour handler]} (nth (:examples state) c)]
       (system/initialise! (assoc system
