@@ -2,7 +2,7 @@
 
 Browser (and eventually editor) for [[https://github.com/tgetgood/lemonade][lemonade]] example projects.
 
-Try it at http://l.macroexpanse.com
+[[https://tgetgood.github.io/expanse/resources/public/index.html][Try it in action]]
 
 * Overview
 	Expanse is to be a collection of code examples demonstrating what is currently
@@ -14,9 +14,9 @@ Try it at http://l.macroexpanse.com
 	the code.
 * Setup
 ** Check It Out
-	 Go to the list at l.macroexpanse.com or localhost:3449/index.html and scroll
-	 through the examples. Click on an example to open it fullscreen, click again
-	 to go back to the index.
+	 Go to the list on [[https://tgetgood.github.io/expanse/resources/public/index.html][GitHub Pages]] or [[*With%20Figwheel][using Figwheel]] and scroll through the
+	 examples. Click on an example to open it fullscreen, click again to go back
+	 to the index.
 
 	 Honestly the online version doesn't do much impressive yet, you're better off
 	 running it in figwheel so you can play with it properly.
@@ -27,7 +27,8 @@ Try it at http://l.macroexpanse.com
 	 $ lein figwheel
 	 #+END_SRC
 
-	 Open your browser to http://localhost:3449/index.html to see the page.
+	 In the project root. Open your browser to http://localhost:3449/index.html to
+	 see the page.
 
 	 The example code is in the =examples= dir at the top level. Each example is a
 	 complete clojure project that will run on its own; expanse is just a browser
@@ -46,40 +47,10 @@ Try it at http://l.macroexpanse.com
 
 	 Start figwheel in your new project folder and follow the instructions from
 	 the previous step.
-* Dev Notes
-** Embedding
-	 The current line of thought only allows static images (or animations) to be
-	 embedded within each other. What we really want is to be able to take one
-	 data driven, interactive visual object and embed it within another.
-
-	 The problem here arises when the child needs to communicate with the parent
-	 in some way. How does the child send changes to the parent? Is it possibly in
-	 a safe way? How does the parent pass instantiation information to the child?
-
-	 Is this whole effort a departure from the relational thinking that was the
-	 original grounding of the lemonade project? Passing from pure data to
-	 functions makes me think that it is, but could there be some way to preserve
-	 it?
-** Thumbnails
-	 It's trivial to scale down a drawing and embed it in another, but how can we
-	 tell the embedding process how much to scale down?
-
-	 Should the initial drawing depend on a window in such a way that the
-	 embedding process can just pass the new window constraints?
-
-	 Should the embedding processs render to an image and find the
-	 orthocentre/bounding box?
-
-	 Should a drawing just come with a bounding box annotation?
-
-	 Well, let's not forget that we have full geometric info on images. We know
-	 from the image data, how many pixels it will span. If the image is assumed to
-	 be finite, scaling the entire thing to the screen size is trivial. That
-	 should be the next line of inquiry.
-** Masking
-	 If a drawing is infinite, or just too big, how do we make sure it's
-	 restricted appropriately? Lemonade currently has no concept of negative
-	 space. Is that the right way to get a polite embedding?
+* Caveats
+** Performance
+	 This is still immature software. The demos here run at 60fps in chrome 61 on
+	 a ~4 year old laptop. Firefox 57 runs around 40 fps. YMMV.
 * License
 
 	Copyright © 2018 Thomas Getgood

@@ -1,0 +1,37 @@
+#+TITLE: Dev Notes
+
+Moved out of the readme.
+
+** Embedding
+	The current line of thought only allows static images (or animations) to be
+	embedded within each other. What we really want is to be able to take one
+	data driven, interactive visual object and embed it within another.
+
+	The problem here arises when the child needs to communicate with the parent
+	in some way. How does the child send changes to the parent? Is it possibly in
+	a safe way? How does the parent pass instantiation information to the child?
+
+	Is this whole effort a departure from the relational thinking that was the
+	original grounding of the lemonade project? Passing from pure data to
+	functions makes me think that it is, but could there be some way to preserve
+	it?
+** Thumbnails
+	 It's trivial to scale down a drawing and embed it in another, but how can we
+	 tell the embedding process how much to scale down?
+
+	 Should the initial drawing depend on a window in such a way that the
+	 embedding process can just pass the new window constraints?
+
+	 Should the embedding processs render to an image and find the
+	 orthocentre/bounding box?
+
+	 Should a drawing just come with a bounding box annotation?
+
+	 Well, let's not forget that we have full geometric info on images. We know
+	 from the image data, how many pixels it will span. If the image is assumed to
+	 be finite, scaling the entire thing to the screen size is trivial. That
+	 should be the next line of inquiry.
+** Masking
+	 If a drawing is infinite, or just too big, how do we make sure it's
+	 restricted appropriately? Lemonade currently has no concept of negative
+	 space. Is that the right way to get a polite embedding?
