@@ -14,6 +14,8 @@
 
   :source-paths ["src"]
 
+  :main elections-demo.core
+
   :cljsbuild
   {:builds
    [{:id           "dev"

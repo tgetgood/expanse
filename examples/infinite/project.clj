@@ -15,6 +15,8 @@
 
   :source-paths ["src"]
 
+  :main infinite.core
+
   :cljsbuild
   {:builds
    [{:id           "dev"

@@ -8,8 +8,6 @@
 
 #?(:cljs (enable-console-print!))
 
-(def host hosts/default-host)
-
 (def ex
   [(-> l/polyline
        (assoc :points [[0 0] [100 100] [300 100] [100 300] [0 0]]
@@ -29,15 +27,12 @@
 
    (l/scale l/circle [4000 500])])
 
-(defn on-reload []
-  ;; REVIEW: Using a draw loop to draw a static image. Wasteful (a little) &
-  ;; confusing that you have to wrap the static image in an fn. What to do with
-  ;; static images? Stateless animations?
+(defn ^:export init []
   (system/initialise!
-   {:host      host
+   {:host      hosts/default-host
     :size      :fullscreen
     :handler   (constantly ex)
     :behaviour (comp hlei/wrap window/wrap-windowing)}))
 
-(defn ^:export init []
-  (on-reload))
+(defn on-reload []
+  (init))

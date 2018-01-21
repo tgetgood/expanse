@@ -9,10 +9,6 @@
 
 #?(:cljs (enable-console-print!))
 
-(def host hosts/default-host)
-
-(defonce app-db (atom {}))
-
 (def factor (/ 36 64))
 
 (def r 7)
@@ -52,15 +48,12 @@
     (rings window)
     []))
 
-(defn on-reload []
-  (system/fullscreen host)
-  (system/initialise!
-   {:host      host
-    :handler   example
-    :behaviour #(-> %
-                    window/wrap-windowing
-                    hlei/wrap)
-    :app-db    app-db}))
-
 (defn ^:export init []
-  (on-reload))
+  (system/initialise!
+   {:host      hosts/default-host
+    :size      :fullscreen
+    :handler   example
+    :behaviour (comp hlei/wrap window/wrap-windowing)}))
+
+(defn on-reload []
+  (init))
