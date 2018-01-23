@@ -6,7 +6,7 @@
 
   :min-lein-version "2.7.1"
 
-  :dependencies [[macroexpanse/lemonade "0.1.0"]
+  :dependencies [[macroexpanse/lemonade "0.2.0"]
                  [org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.9.946"]]
 
@@ -43,7 +43,7 @@
                     :pretty-print   false}}]}
 
   :profiles
-  {:dev  {:dependencies  [[binaryage/devtools "0.9.4"]
+  {:dev  {:dependencies  [[binaryage/devtools "0.9.9"]
                           [com.cemerick/piggieback "0.2.2"]
                           [figwheel-sidecar "0.5.14"
                            :exclusions [org.clojure/core.async]]
