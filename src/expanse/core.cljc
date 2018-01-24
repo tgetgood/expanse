@@ -18,7 +18,7 @@
              {:mutation [(fn [state]
                            (let [s (::scroll state)
                                  c (-> state :examples count)]
-                             (assoc state ::scroll (max 550 (+ s (* 10 dy))))))]})})
+                             (assoc state ::scroll (max 550 (+ s dy)))))]})})
 
 (defn scroll-wrap [render]
   (fn [state]
