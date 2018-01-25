@@ -56,7 +56,9 @@
 (defn ^:export init []
   (system/initialise!
    {:size   :fullscreen
-    :render chomp}))
+    :render (-> chomp
+                (l/scale 20)
+                (l/translate [300 300]))}))
 
 (defn on-reload []
   (on-reload))

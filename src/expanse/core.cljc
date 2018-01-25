@@ -22,12 +22,9 @@
 
 (defn scroll-wrap [render]
   (fn [state]
-    (let [w (render state)]
-      (with-meta
-        (assoc
-         (l/translate w [0 (::scroll state)])
-         :lemonade.events/handlers scroll-handler)
-        (meta w)))))
+    (assoc
+     (l/translate (render state) [0 (::scroll state)])
+     :lemonade.events/handlers scroll-handler)))
 
 (def click-handler
   #:lemonade.events
@@ -69,11 +66,9 @@
 
 (defn click-wrap [render]
   (fn [state]
-    (let [w (render state)]
-      (with-meta
-        (assoc (l/composite {} [w])
-               :lemonade.events/handlers click-handler)
-        (meta w)))))
+    (assoc (l/composite {} [(render state)])
+           :lemonade.events/handlers click-handler)))
+
 
 (defn frames [n dim]
   (map (fn [i]
@@ -108,11 +103,9 @@
     (let [{:keys [behaviour render]} (nth (:examples state) c)]
       (system/initialise!
        (assoc system
-              :render    (with-meta
-                           #(if (:current %)
-                              (if (fn? render) (render %) render)
-                              (do (system/initialise! system) []))
-                           (meta render))
+              :render    #(if (:current %)
+                            (if (fn? render) (render %) render)
+                            (do (system/initialise! system) []))
               :behaviour (comp behaviour click-wrap)))
       ;; Return empty shape.
       [])
