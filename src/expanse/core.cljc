@@ -83,13 +83,14 @@
         offsets (frames n dim)
         sf (/ dim width)]
     (->
-     (map (fn [offset {:keys [handler]}]
-            (-> [(l/scale (assoc l/frame :width cut :height cut
-                               :contents (handler state))
-                        (/ width cut))
-                 (assoc l/rectangle :width width :height width)]
-                (l/scale sf)
-                (l/translate offset)))
+     (map (fn [offset {:keys [render]}]
+            (let [render (if (fn? render) render (constantly render))]
+              (-> [(l/scale (assoc l/frame :width cut :height cut
+                                   :contents (render state))
+                            (/ width cut))
+                   (assoc l/rectangle :width width :height width)]
+                  (l/scale sf)
+                  (l/translate offset))))
           offsets (:examples state))
      (l/translate [(/ (- width (* n dim)) 2) 0]))))
 
@@ -99,11 +100,11 @@
   ;; HACK: Holy shit is this kludgy. Dynamically swap out the rendering system
   ;; from inside the handler callback?!?!? Seems to work for the time being...
   (if-let [c (:current state)]
-    (let [{:keys [behaviour handler]} (nth (:examples state) c)]
+    (let [{:keys [behaviour render]} (nth (:examples state) c)]
       (system/initialise! (assoc system
-                                 :handler #(if (:current %)
-                                             (handler %)
-                                             (do (system/initialise! system) []))
+                                 :render    #(if (:current %)
+                                               (if (fn? render) (render %) render)
+                                               (do (system/initialise! system) []))
                                  :behaviour (comp behaviour click-wrap)))
       ;; Return empty shape.
       [])
@@ -113,15 +114,13 @@
   {:host      host
    :size      :fullscreen
    :app-db    app-state
-   :handler   handler
+   :render    handler
    :behaviour (comp hlei/wrap click-wrap scroll-wrap)})
 
 (defn data-init! []
-  (binding [lemonade.system/initialise! identity]
-    (let [sub-images (mapv (fn [x] (x)) fetch/demo-list)
-          db (apply merge (map deref (remove nil? (map :app-db sub-images))))
-          handlers (map :handler sub-images)]
-      (swap! app-state (fn [old] (merge db old {:examples sub-images}))))))
+  (let [dl (fetch/demo-list)
+        db-mods (->> dl (map :app-db) (remove nil?) (map deref) (apply merge))]
+    (swap! app-state (fn [db] (merge db-mods db {:examples dl})))))
 
 (defn on-reload []
   (system/initialise! system)

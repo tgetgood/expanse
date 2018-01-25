@@ -1,11 +1,9 @@
 (ns infinite.core
   (:require
    [lemonade.core :as l]
-   [lemonade.hosts :as hosts]
    [lemonade.math :as math]
    [lemonade.system :as system]
-   [lemonade.window :as window]
-   [lemonade.events.hlei :as hlei]))
+   [lemonade.window :as window]))
 
 #?(:cljs (enable-console-print!))
 
@@ -50,10 +48,8 @@
 
 (defn ^:export init []
   (system/initialise!
-   {:host      hosts/default-host
-    :size      :fullscreen
-    :handler   example
-    :behaviour (comp hlei/wrap window/wrap-windowing)}))
+   {:size   :fullscreen
+    :render example}))
 
 (defn on-reload []
   (init))

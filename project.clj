@@ -13,6 +13,8 @@
             [lein-cljsbuild "1.1.7" :exclusions [org.clojure/clojure]]]
 
   :source-paths ["src"
+                 "examples/chase/src"
+                 "examples/pixel/src"
                  "examples/elections-demo/src"
                  "examples/basic/src"
                  "examples/infinite/src"]
@@ -24,6 +26,8 @@
                     "../lemonade/src"
                     "examples/elections-demo/src"
                     "examples/basic/src"
+                    "examples/chase/src"
+                    "examples/pixel/src"
                     "examples/infinite/src"]
 
      :figwheel     {:on-jsload "expanse.core/on-reload"}
@@ -39,6 +43,8 @@
 
     {:id           "min"
      :source-paths ["src"
+                    "examples/chase/src"
+                    "examples/pixel/src"
                     "examples/elections-demo/src"
                     "examples/basic/src"
                     "examples/infinite/src"]
@@ -51,7 +57,7 @@
                     :pretty-print   false}}]}
 
   :profiles
-  {:prod {:dependencies [[macroexpanse/lemonade "0.2.0"]]}
+  {:prod {:dependencies [[macroexpanse/lemonade "0.3.0"]]}
    :dev  {:dependencies  [[binaryage/devtools "0.9.9"]
                           [quil "2.6.0" :exclusions [[org.clojure/clojure]]]
                           [org.clojure/spec.alpha "0.1.134"]
@@ -65,6 +71,8 @@
           :source-paths  ["src"
                           "dev"
                           "../lemonade/src"
+                          "examples/chase/src"
+                          "examples/pixel/src"
                           "examples/basic/src"
                           "examples/infinite/src"
                           "examples/elections-demo/src"]

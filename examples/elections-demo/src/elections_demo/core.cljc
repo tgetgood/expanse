@@ -1,11 +1,7 @@
 (ns elections-demo.core
-  (:require
-   [lemonade.core :as core :refer [line scale translate with-style]]
-   [lemonade.hosts :as hosts]
-   [lemonade.math :as math]
-   [lemonade.system :as system]
-   [lemonade.window :as window]
-   [lemonade.events.hlei :as hlei]))
+  (:require [lemonade.core :as core :refer [line scale translate with-style]]
+            [lemonade.math :as math]
+            [lemonade.system :as system]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Example Data
@@ -355,12 +351,11 @@
 
 (defn init! [handler]
   (system/initialise!
-   {:host      hosts/default-host
-    :size      :fullscreen
-    :handler   handler
-    :behaviour (comp hlei/wrap window/wrap-windowing)
+   {:size      :fullscreen
+    :render    handler
     :app-db    app-db}))
 
+;; TODO: Move this into its own example
 (defn ^:export init-circles []
   (init! ring-example-handler))
 
