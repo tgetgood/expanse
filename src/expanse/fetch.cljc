@@ -4,6 +4,7 @@
             elections-demo.core
             infinite.core
             [lemonade.events.hlei :as hlei]
+            [lemonade.system :as system]
             [lemonade.window :as window]
             pixel.core))
 
@@ -27,4 +28,4 @@
   (binding [lemonade.system/initialise! identity]
     (->> demo-nses
          (mapv exec)
-         (map #(update % :behaviour (fnil identity default-behaviour))))))
+         (map system/with-defaults))))

@@ -22,9 +22,12 @@
 
 (defn scroll-wrap [render]
   (fn [state]
-    (assoc
-     (l/translate (render state) [0 (::scroll state)])
-     :lemonade.events/handlers scroll-handler)))
+    (let [w (render state)]
+      (with-meta
+        (assoc
+         (l/translate w [0 (::scroll state)])
+         :lemonade.events/handlers scroll-handler)
+        (meta w)))))
 
 (def click-handler
   #:lemonade.events
@@ -66,8 +69,11 @@
 
 (defn click-wrap [render]
   (fn [state]
-    (assoc (l/composite {} [(render state)])
-           :lemonade.events/handlers click-handler)))
+    (let [w (render state)]
+      (with-meta
+        (assoc (l/composite {} [w])
+               :lemonade.events/handlers click-handler)
+        (meta w)))))
 
 (defn frames [n dim]
   (map (fn [i]
@@ -84,13 +90,12 @@
         sf (/ dim width)]
     (->
      (map (fn [offset {:keys [render]}]
-            (let [render (if (fn? render) render (constantly render))]
-              (-> [(l/scale (assoc l/frame :width cut :height cut
-                                   :contents (render state))
-                            (/ width cut))
-                   (assoc l/rectangle :width width :height width)]
-                  (l/scale sf)
-                  (l/translate offset))))
+            (-> [(l/scale (assoc l/frame :width cut :height cut
+                                 :contents (render state))
+                          (/ width cut))
+                 (assoc l/rectangle :width width :height width)]
+                (l/scale sf)
+                (l/translate offset)))
           offsets (:examples state))
      (l/translate [(/ (- width (* n dim)) 2) 0]))))
 
@@ -101,11 +106,14 @@
   ;; from inside the handler callback?!?!? Seems to work for the time being...
   (if-let [c (:current state)]
     (let [{:keys [behaviour render]} (nth (:examples state) c)]
-      (system/initialise! (assoc system
-                                 :render    #(if (:current %)
-                                               (if (fn? render) (render %) render)
-                                               (do (system/initialise! system) []))
-                                 :behaviour (comp behaviour click-wrap)))
+      (system/initialise!
+       (assoc system
+              :render    (with-meta
+                           #(if (:current %)
+                              (if (fn? render) (render %) render)
+                              (do (system/initialise! system) []))
+                           (meta render))
+              :behaviour (comp behaviour click-wrap)))
       ;; Return empty shape.
       [])
     (panes state)))
