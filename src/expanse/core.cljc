@@ -1,10 +1,24 @@
 (ns expanse.core
-  (:require [expanse.fetch :as fetch]
-            [lemonade.core :as l]
-            [lemonade.events.hlei :as hlei]
-            [lemonade.hosts :as hosts]
-            [lemonade.system :as system]
-            [lemonade.window :as window]))
+  #?@(:clj
+       [(:require
+         [clojure.pprint :refer [pprint]]
+         [clojure.string :as string]
+         [expanse.fetch :as fetch]
+         [lemonade.core :as l]
+         [lemonade.events.hlei :as hlei]
+         [lemonade.hosts :as hosts]
+         [lemonade.math :as math]
+         [lemonade.system :as system])]
+       :cljs
+       [(:require
+         [cljs.pprint :refer [pprint]]
+         [clojure.string :as string]
+         [expanse.fetch :as fetch]
+         [lemonade.core :as l]
+         [lemonade.events.hlei :as hlei]
+         [lemonade.hosts :as hosts]
+         [lemonade.math :as math]
+         [lemonade.system :as system])]))
 
 #?(:cljs (enable-console-print!))
 
@@ -96,6 +110,37 @@
 
 (declare system)
 
+(def code-background
+  (assoc l/rectangle :style {:fill "#E1E1E1"
+                             :stroke "rgba(0,0,0,0)"}))
+
+(def format-code
+  (memoize
+   (fn [code]
+     (string/split-lines (with-out-str (pprint code))))))
+
+(defn set-code [code h]
+  (let [lines (take (quot h 16) (format-code code))
+        line-height 16
+        box-height  (* (inc (count lines)) line-height)
+        num-width (* 12 (inc (math/floor (math/log 10 (count lines)))))]
+    [(l/scale code-background [(+ num-width 600 5) box-height])
+     (assoc l/line :from [num-width 0] :to [num-width box-height])
+     (l/with-style {:font "14px monospace"}
+       (map-indexed (fn [i line]
+                      (let [h (- box-height (* line-height (inc i)))]
+                        [(assoc l/text :text (str (inc i)) :corner [5 h] )
+                         (assoc l/text :text line :corner [(+ 5 num-width) h])]))
+                    lines))]))
+
+(defn sub-render [render behaviour]
+  (fn [state]
+    (if (:current state)
+      (let [w (render state)]
+        [(l/translate ((behaviour render) state) [630 0])
+         (set-code w (-> state :lemonade.core/window :height))])
+      (do (system/initialise! system) []))))
+
 (defn handler [state]
   ;; HACK: Holy shit is this kludgy. Dynamically swap out the rendering system
   ;; from inside the handler callback?!?!? Seems to work for the time being...
@@ -103,10 +148,8 @@
     (let [{:keys [behaviour render]} (nth (:examples state) c)]
       (system/initialise!
        (assoc system
-              :render    #(if (:current %)
-                            (if (fn? render) (render %) render)
-                            (do (system/initialise! system) []))
-              :behaviour (comp behaviour click-wrap)))
+              :render    (sub-render render behaviour)
+              :behaviour (comp hlei/wrap click-wrap)))
       ;; Return empty shape.
       [])
     (panes state)))

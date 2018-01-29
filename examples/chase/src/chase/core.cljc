@@ -1,5 +1,6 @@
 (ns chase.core
   "Simple animation compositing example"
+  ;; TODO: animations.
   (:require [lemonade.core :as l]
             [elections-demo.core :refer [annular-wedge]]
             [pixel.core :refer [blinky]]
@@ -21,13 +22,12 @@
           :style {:fill :black})])
 
 (def pacman-open
-  (map pacman (range 0 0.6 0.05)))
+  (map pacman (range 0.5 0.6 0.05)))
 
 (def chomp
   (with-meta
-    (take 120
-          (apply concat
-                 (repeat (concat pacman-open (reverse pacman-open)))))
+    (apply concat
+           (repeat (concat pacman-open (reverse pacman-open))))
     {:animation true :framerate 60}))
 
 (def base-blinky
@@ -56,7 +56,7 @@
 (defn ^:export init []
   (system/initialise!
    {:size   :fullscreen
-    :render (-> chomp
+    :render (-> (first chomp)
                 (l/scale 20)
                 (l/translate [300 300]))}))
 
