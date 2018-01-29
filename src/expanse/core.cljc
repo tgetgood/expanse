@@ -16,6 +16,7 @@
          [expanse.fetch :as fetch]
          [lemonade.core :as l]
          [lemonade.events.hlei :as hlei]
+         [lemonade.geometry :as geo]
          [lemonade.hosts :as hosts]
          [lemonade.math :as math]
          [lemonade.system :as system])]))
@@ -133,10 +134,13 @@
                          (assoc l/text :text line :corner [(+ 5 num-width) h])]))
                     lines))]))
 
+(defonce dbt (atom nil))
+
 (defn sub-render [render behaviour]
   (fn [state]
     (if (:current state)
       (let [w (render state)]
+        (reset! dbt w)
         [(l/translate ((behaviour render) state) [630 0])
          (set-code w (-> state :lemonade.core/window :height))])
       (do (system/initialise! system) []))))
