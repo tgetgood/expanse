@@ -9,7 +9,8 @@
          [lemonade.geometry :as geo]
          [lemonade.hosts :as hosts]
          [lemonade.math :as math]
-         [lemonade.system :as system])]
+         [lemonade.system :as system]
+         [lemonade.transformation :as tx])]
        :cljs
        [(:require
          [cljs.pprint :refer [pprint]]
@@ -20,7 +21,8 @@
          [lemonade.geometry :as geo]
          [lemonade.hosts :as hosts]
          [lemonade.math :as math]
-         [lemonade.system :as system])]))
+         [lemonade.system :as system]
+         [lemonade.transformation :as tx])]))
 
 #?(:cljs (enable-console-print!))
 
@@ -148,7 +150,7 @@
             c (geo/retree (geo/effected-branches (::click state) w))]
         [w
          (l/with-style {:fill :blue :opacity 0.3} c)
-         (set-code c (-> state :lemonade.core/window :height))])
+         (set-code (tx/friendlify-code c) (-> state :lemonade.core/window :height))])
       (do (system/initialise! system) []))))
 
 (defn handler [state]
