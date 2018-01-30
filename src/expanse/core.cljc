@@ -6,6 +6,7 @@
          [expanse.fetch :as fetch]
          [lemonade.core :as l]
          [lemonade.events.hlei :as hlei]
+         [lemonade.geometry :as geo]
          [lemonade.hosts :as hosts]
          [lemonade.math :as math]
          [lemonade.system :as system])]
@@ -69,15 +70,18 @@
                ox (/ (- width (* n dim)) 2)
                rx (- x ox)
                i (+ (quot rx dim) (* n (quot ry dim)))]
-           (-> state
-               (update :current (fn [c]
-                                  (if c
-                                    nil
-                                    (when (and (< 0 ry)
-                                               (< 0 rx (* n dim))
-                                               (< -1 i num-ex))
-                                      i))))
-               (update :lemonade.core/window assoc :zoom 0 :offset [0 0]))))]})})
+           (if (:current state)
+             (assoc state ::click [x y])
+             (-> state
+                 (update :current (fn [c]
+                                    (if c
+                                      nil
+                                      (when (and (< 0 ry)
+                                                 (< 0 rx (* n dim))
+                                                 (< -1 i num-ex))
+                                        i))))
+                 (update :lemonade.core/window assoc :zoom 0 :offset [0 0]))
+             )))]})})
 
 (defn click-wrap [render]
   (fn [state]
@@ -121,10 +125,10 @@
      (string/split-lines (with-out-str (pprint code))))))
 
 (defn set-code [code h]
-  (let [lines (take (quot h 16) (format-code code))
+  (let [lines       (take (quot h 16) (format-code code))
         line-height 16
         box-height  (* (inc (count lines)) line-height)
-        num-width (* 12 (inc (math/floor (math/log 10 (count lines)))))]
+        num-width   (* 12 (inc (math/floor (math/log 10 (count lines)))))]
     [(l/scale code-background [(+ num-width 600 5) box-height])
      (assoc l/line :from [num-width 0] :to [num-width box-height])
      (l/with-style {:font "14px monospace"}
@@ -139,10 +143,12 @@
 (defn sub-render [render behaviour]
   (fn [state]
     (if (:current state)
-      (let [w (render state)]
-        (reset! dbt w)
-        [(l/translate ((behaviour render) state) [630 0])
-         (set-code w (-> state :lemonade.core/window :height))])
+      (let [w (l/translate ((behaviour render) state) [630 0])
+            _ (reset! dbt w)
+            c (geo/retree (geo/effected-branches (::click state) w))]
+        [w
+         (l/with-style {:fill :blue :opacity 0.3} c)
+         (set-code c (-> state :lemonade.core/window :height))])
       (do (system/initialise! system) []))))
 
 (defn handler [state]
@@ -157,6 +163,13 @@
       ;; Return empty shape.
       [])
     (panes state)))
+
+(defn nav!
+  ([] (nav! nil))
+  ([n]
+   (swap! app-state assoc :current n)
+   (system/initialise! system)
+   nil))
 
 (def system
   {:host      host
