@@ -72,18 +72,17 @@
                ox (/ (- width (* n dim)) 2)
                rx (- x ox)
                i (+ (quot rx dim) (* n (quot ry dim)))]
-           (if (:current state)
-             (assoc state ::click [x y])
-             (-> state
-                 (update :current (fn [c]
-                                    (if c
-                                      nil
-                                      (when (and (< 0 ry)
-                                                 (< 0 rx (* n dim))
-                                                 (< -1 i num-ex))
-                                        i))))
-                 (update :lemonade.core/window assoc :zoom 0 :offset [0 0]))
-             )))]})})
+           (-> state
+               (update :current (fn [c]
+                                  (if c
+                                    nil
+                                    (when (and (< 0 ry)
+                                               (< 0 rx (* n dim))
+                                               (< -1 i num-ex))
+                                      i))))
+               (update :lemonade.core/window assoc :zoom 0 :offset [0 0]))))]})
+   :hover (fn [{:keys [location]}]
+            {:mutation [assoc ::click location]})})
 
 (defn click-wrap [render]
   (fn [state]
