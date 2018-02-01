@@ -96,6 +96,14 @@
        (range)))
 
 (defn panes [state]
+  ;; IDEA: We want to register a handler on each pane; conceptually at least. In
+  ;; the new format, we want to put a recognisable key on each pane, and attach
+  ;; some ancilliary state. Then when something with that key registers a click,
+  ;; we want to lookup the function tied to [key :click] and execute it on the
+  ;; thing with key.
+  ;;
+  ;; This is half baked, but the best way to bake it is probably just to give it
+  ;; a shot.
   (let [{:keys [height width]} (:lemonade.core/window state)
         frame-width 500
         cut 1300
