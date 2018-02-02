@@ -4,91 +4,35 @@
          [clojure.pprint :refer [pprint]]
          [clojure.string :as string]
          [expanse.fetch :as fetch]
+         [lemonade.coordinates :as coords]
          [lemonade.core :as l]
          [lemonade.events.hlei :as hlei]
          [lemonade.geometry :as geo]
          [lemonade.hosts :as hosts]
          [lemonade.math :as math]
          [lemonade.system :as system]
-         [lemonade.transformation :as tx])]
+         [lemonade.transformation :as tx]
+         [lemonade.window :as window])]
        :cljs
        [(:require
          [cljs.pprint :refer [pprint]]
          [clojure.string :as string]
          [expanse.fetch :as fetch]
          [lemonade.core :as l]
+         [lemonade.coordinates :as coords]
          [lemonade.events.hlei :as hlei]
          [lemonade.geometry :as geo]
          [lemonade.hosts :as hosts]
          [lemonade.math :as math]
          [lemonade.system :as system]
-         [lemonade.transformation :as tx])]))
+         [lemonade.transformation :as tx]
+         [lemonade.window :as window])]))
 
 #?(:cljs (enable-console-print!))
 
 (defonce app-state (atom {:examples [] ::scroll 500}))
 
 (def host hosts/default-host)
-
-(def scroll-handler
-  #:lemonade.events
-  {:scroll (fn [{:keys [dy]}]
-             {:mutation [(fn [state]
-                           (let [s (::scroll state)
-                                 c (-> state :examples count)]
-                             (assoc state ::scroll (max 550 (+ s dy)))))]})})
-
-(defn scroll-wrap [render]
-  (fn [state]
-    (assoc
-     (l/translate (render state) [0 (::scroll state)])
-     :lemonade.events/handlers scroll-handler)))
-
-(def click-handler
-  #:lemonade.events
-  {:left-click
-   (fn [{[x y] :location}]
-     {:mutation
-      [(fn [state]
-         ;; REVIEW: This is duplicating the geometry calculation that laid out
-         ;; the screen in the first place. This is basically a form of path
-         ;; dependence but even worse.
-         ;;
-         ;; So we really do want to be able to attach behaviour to the vos at
-         ;; vaious points in the tree. In this case we want to give each example
-         ;; pane metadata (whatever it needs to set itself as main) and then
-         ;; have some generic logic call the handler with the pane in which the
-         ;; event takes place.
-         ;;
-         ;; So here's another thing the DOM does well enough that I need to
-         ;; replicate it.
-         (let [{:keys [height width]} (-> state :lemonade.core/window)
-               num-ex (-> state :examples count)
-               scroll (::scroll state)
-               frame-width 500
-               n (max 1 (quot width frame-width))
-               dim (min width frame-width)
-               ry (+ (- y) scroll frame-width)
-               ox (/ (- width (* n dim)) 2)
-               rx (- x ox)
-               i (+ (quot rx dim) (* n (quot ry dim)))]
-           (-> state
-               (update :current (fn [c]
-                                  (if c
-                                    nil
-                                    (when (and (< 0 ry)
-                                               (< 0 rx (* n dim))
-                                               (< -1 i num-ex))
-                                      i))))
-               (update :lemonade.core/window assoc :zoom 0 :offset [0 0]))))]})
-   :hover (fn [{:keys [location]}]
-            {:mutation [assoc ::click location]})})
-
-(defn click-wrap [render]
-  (fn [state]
-    (assoc (l/composite {} [(render state)])
-           :lemonade.events/handlers click-handler)))
-
 
 (defn frames [n dim]
   (map (fn [i]
@@ -128,7 +72,7 @@
                                :contents (render state))
                         (/ width cut))
                (assoc l/rectangle :width width :height width)]
-              {::events {:key ::example-pane :index i}})
+              {:events {:key ::example-pane :index i}})
             (l/scale sf)
             (l/translate offset)))
       (partition 2 (interleave offsets (:examples state))))
@@ -159,12 +103,12 @@
                          (assoc l/text :text line :corner [(+ 5 num-width) h])]))
                     lines))]))
 
-(defn sub-render [render behaviour]
+(defn sub-render [render]
   (fn [state]
     (if (:current state)
-      (let [w (l/translate ((behaviour render) state) [630 0])
-            c (geo/retree (geo/effected-branches (::click state) w))]
-        [w
+      (let [w (l/translate ((window/wrap-windowing render) state) [630 0])
+            c (or (::code-hover state) [])]
+        [(with-meta w {:events {:key ::introspectable}})
          (l/with-style {:fill :blue :opacity 0.3} c)
          (set-code (tx/friendlify-code c) (-> state :lemonade.core/window :height))])
       (do (system/initialise! system) []))))
@@ -173,11 +117,19 @@
   ;; HACK: Holy shit is this kludgy. Dynamically swap out the rendering system
   ;; from inside the handler callback?!?!? Seems to work for the time being...
   (if-let [c (:current state)]
-    (let [{:keys [behaviour render]} (nth (:examples state) c)]
+    (let [{:keys [render]} (nth (:examples state) c)
+          {:keys [width height]} (:lemonade.core/window state)]
       (system/initialise!
-       (assoc system
-              :render    (sub-render render behaviour)
-              :behaviour (comp hlei/wrap click-wrap)))
+       (assoc system :render (fn [state]
+                               [(with-meta
+                                  (assoc l/rectangle
+                                         :width width
+                                         :height height
+                                         :style {:stroke :none
+                                                 :fill :none
+                                                 :opacity 0})
+                                  {:events {:key ::embedding-window}})
+                                ((sub-render render) state)])))
       ;; Return empty shape.
       [])
     (panes state)))
@@ -189,12 +141,38 @@
    (system/initialise! system)
    nil))
 
+(def event-map
+  (merge
+   {:lemonade.events/left-click
+    {::example-pane     (fn [_ _ shape]
+                          {:mutation [assoc :current (-> shape
+                                                         meta
+                                                         :events
+                                                         :index)]})
+     ::embedding-window (fn [_ _ _]
+                          {:mutation [dissoc :current]})}
+
+    :lemonade.events/hover
+    {::embedding-window (fn [{:keys [location]} _ _]
+                          {:mutation [assoc ::hover location]})
+     ::introspectable   (fn [{:keys [location]} state shape]
+                          {:mutation
+                           [assoc ::code-hover
+                            (geo/retree (geo/effected-branches
+                                         location
+                                         shape))]})}}
+   (into {}
+         (map (fn [[k v]] [k {::embedding-window v}])
+              window/window-events))))
+
+
 (def system
   {:host      host
    :size      :fullscreen
    :app-db    app-state
    :render    handler
-   :behaviour (comp hlei/wrap click-wrap scroll-wrap)})
+   :event-middleware hlei/expand
+   :event-handlers event-map })
 
 (defn data-init! []
   (let [dl (fetch/demo-list)

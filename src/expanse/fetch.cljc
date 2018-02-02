@@ -3,9 +3,7 @@
             chase.core
             elections-demo.core
             infinite.core
-            [lemonade.events.hlei :as hlei]
             [lemonade.system :as system]
-            [lemonade.window :as window]
             pixel.core))
 
 (def demo-nses
@@ -19,8 +17,6 @@
    chase.core/init
    basic.core/init
    infinite.core/init])
-
-(def default-behaviour (comp hlei/wrap window/wrap-windowing))
 
 (defn exec [x] (x))
 
