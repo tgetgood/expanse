@@ -104,6 +104,15 @@
   ;;
   ;; This is half baked, but the best way to bake it is probably just to give it
   ;; a shot.
+  (comment
+    ;; This guy handles events just dandy. Gets the frame clicked in any case...
+    (when (= (:type ev) ::left-mouse-up)
+      (println (filter #(contains? % :expanse.core/events)
+                          (map meta
+                               (first (geo/effected-branches
+                                       (:location ev)
+                                       (state/world))))))))
+
   (let [{:keys [height width]} (:lemonade.core/window state)
         frame-width 500
         cut 1300
@@ -112,14 +121,17 @@
         offsets (frames n dim)
         sf (/ dim width)]
     (->
-     (map (fn [offset {:keys [render]}]
-            (-> [(l/scale (assoc l/frame :width cut :height cut
-                                 :contents (render state))
-                          (/ width cut))
-                 (assoc l/rectangle :width width :height width)]
-                (l/scale sf)
-                (l/translate offset)))
-          offsets (:examples state))
+     (map-indexed
+      (fn [i [offset {:keys [render]}]]
+        (-> (with-meta
+              [(l/scale (assoc l/frame :width cut :height cut
+                               :contents (render state))
+                        (/ width cut))
+               (assoc l/rectangle :width width :height width)]
+              {::events {:key ::example-pane :index i}})
+            (l/scale sf)
+            (l/translate offset)))
+      (partition 2 (interleave offsets (:examples state))))
      (l/translate [(/ (- width (* n dim)) 2) 0]))))
 
 (declare system)
@@ -147,13 +159,10 @@
                          (assoc l/text :text line :corner [(+ 5 num-width) h])]))
                     lines))]))
 
-(defonce dbt (atom nil))
-
 (defn sub-render [render behaviour]
   (fn [state]
     (if (:current state)
       (let [w (l/translate ((behaviour render) state) [630 0])
-            _ (reset! dbt w)
             c (geo/retree (geo/effected-branches (::click state) w))]
         [w
          (l/with-style {:fill :blue :opacity 0.3} c)
