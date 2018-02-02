@@ -4,7 +4,6 @@
          [clojure.pprint :refer [pprint]]
          [clojure.string :as string]
          [expanse.fetch :as fetch]
-         [lemonade.coordinates :as coords]
          [lemonade.core :as l]
          [lemonade.events.hlei :as hlei]
          [lemonade.geometry :as geo]
@@ -18,9 +17,8 @@
          [cljs.pprint :refer [pprint]]
          [clojure.string :as string]
          [expanse.fetch :as fetch]
-         [lemonade.core :as l]
-         [lemonade.coordinates :as coords]
          [lemonade.events.hlei :as hlei]
+         [lemonade.core :as l]
          [lemonade.geometry :as geo]
          [lemonade.hosts :as hosts]
          [lemonade.math :as math]
@@ -142,40 +140,36 @@
    nil))
 
 (def event-map
-  (merge
-   {:lemonade.events/left-click
-    {::example-pane     (fn [_ _ shape]
-                          {:mutation [assoc :current (-> shape
-                                                         meta
-                                                         :events
-                                                         :index)]})
-     ::embedding-window (fn [_ _ _]
-                          {:mutation [dissoc :current]})}
+  {::example-pane
+   (merge hlei/handlers
+          #:lemonade.events
+          {:left-click (fn [_ _ shape]
+                         {:mutation [assoc :current (-> shape
+                                                        meta
+                                                        :events
+                                                        :index)]})})
+   ::introspectable
+   {:lemonade.events/mouse-move (fn [{:keys [location]} state shape]
+                             {:mutation
+                              [assoc ::code-hover
+                               (geo/retree (geo/effected-branches
+                                            location shape))]})}
 
-    :lemonade.events/hover
-    {::embedding-window (fn [{:keys [location]} _ _]
-                          {:mutation [assoc ::hover location]})
-     ::introspectable   (fn [{:keys [location]} state shape]
-                          {:mutation
-                           [assoc ::code-hover
-                            (geo/retree (geo/effected-branches
-                                         location
-                                         shape))]})}}
-   (into {}
-         (map (fn [[k v]] [k {::embedding-window v}])
-              window/window-events))))
+   ::embedding-window
+   (merge hlei/handlers
+          {:lemonade.events/left-click (fn [_ _ _]
+                                         {:mutation [dissoc :current]})})})
 
 
 (def system
-  {:host      host
-   :size      :fullscreen
-   :app-db    app-state
-   :render    handler
-   :event-middleware hlei/expand
-   :event-handlers event-map })
+  {:host           host
+   :size           :fullscreen
+   :app-db         app-state
+   :render         handler
+   :event-handlers event-map})
 
 (defn data-init! []
-  (let [dl (fetch/demo-list)
+  (let [dl      (fetch/demo-list)
         db-mods (->> dl (map :app-db) (remove nil?) (map deref) (apply merge))]
     (swap! app-state (fn [db] (merge db-mods db {:examples dl})))))
 
