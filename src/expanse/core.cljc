@@ -149,11 +149,15 @@
                                                         :events
                                                         :index)]})})
    ::introspectable
-   {:lemonade.events/mouse-move (fn [{:keys [location]} state shape]
-                             {:mutation
-                              [assoc ::code-hover
-                               (geo/retree (geo/effected-branches
-                                            location shape))]})}
+   (merge hlei/handlers
+          {:lemonade.events/hover (fn [{:keys [location]} state shape]
+                                    {:mutation
+                                     [assoc ::code-hover
+                                      (geo/retree (geo/effected-branches
+                                                   location shape))]})})
+
+   ::window/window
+   (merge hlei/handlers window/window-events)
 
    ::embedding-window
    (merge hlei/handlers
