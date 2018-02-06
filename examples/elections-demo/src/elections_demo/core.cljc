@@ -273,17 +273,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(core/deftemplate ::annular-wedge
+(core/deftemplate annular-wedge
   {:style        {}
    :inner-radius 1
    :outer-radius 2
    :from         0
    :to           math/pi
    :centre       [0 0]}
-  (let [fc (math/cos from)
-        tc (math/cos to)
-        fs (math/sin from)
-        ts (math/sin to)
+  (let [fc  (math/cos from)
+        tc  (math/cos to)
+        fs  (math/sin from)
+        ts  (math/sin to)
 
         ix1 (* inner-radius fc)
         iy1 (* inner-radius fs)
@@ -297,21 +297,20 @@
     ;; Fun fact, none of the math above is necessary when rendering to canvas
     ;; because of the stateful strokes. I don't want to leave it out though,
     ;; because I don't want to be beholden to canvas.
-    (core/path style
-               ^:closed [(assoc core/arc
-                                :centre centre
-                                :radius inner-radius
-                                :from from
-                                :to to
-                                :clockwise? false)
-                         (assoc line :from [ix2 iy2] :to [ox2 oy2])
-                         (assoc core/arc
-                                :centre centre
-                                :radius outer-radius
-                                :from to
-                                :to from
-                                :clockwise? true)
-                         (assoc line :from [ox1 oy1] :to [ix1 iy1])])))
+    (core/region style [(assoc core/arc
+                               :centre centre
+                               :radius inner-radius
+                               :from from
+                               :to to
+                               :clockwise? false)
+                        (assoc line :from [ix2 iy2] :to [ox2 oy2])
+                        (assoc core/arc
+                               :centre centre
+                               :radius outer-radius
+                               :from to
+                               :to from
+                               :clockwise? true)
+                        (assoc line :from [ox1 oy1] :to [ix1 iy1])])))
 
 (defn wedge [party from to]
   "Normalised"

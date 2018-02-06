@@ -67,7 +67,7 @@
       (fn [i [offset {:keys [render]}]]
         (-> (with-meta
               [(l/scale (assoc l/frame :width cut :height cut
-                               :contents (render state))
+                               :base-shape (render state))
                         (/ width cut))
                (assoc l/rectangle :width width :height width)]
               {:events {:key ::example-pane :index i}})
@@ -130,7 +130,7 @@
                                 ((sub-render render) state)])))
       ;; Return empty shape.
       [])
-    (panes state)))
+    (l/translate (panes state) [0 600])))
 
 (defn nav!
   ([] (nav! nil))
@@ -169,7 +169,7 @@
   {:host           host
    :size           :fullscreen
    :app-db         app-state
-   :render         handler
+   :render         basic.core/ex
    :event-handlers event-map})
 
 (defn data-init! []

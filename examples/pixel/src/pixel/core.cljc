@@ -5,15 +5,15 @@
 
 #?(:cljs (enable-console-print!))
 
-(l/deftemplate ::pixel
+(l/deftemplate pixel
   {:colour :black
    :location [0 0]}
-  {:type :lemonade.core/rectangle
-   :width 1
-   :height 1
-   :corner location
-   :style {:stroke colour
-           :fill colour}})
+  (assoc l/rectangle
+         :width 1
+         :height 1
+         :corner location
+         :style {:stroke colour
+                 :fill colour}))
 
 (def grid
   (into #{}

@@ -13,6 +13,7 @@
        (l/rotate 20)
        (l/translate [300 40]))
    (assoc l/line :from [800 100] :to [900 100])
+   (assoc l/arc :centre [0 0] :radius 200 :style {:stroke :red} :from 0 :to 1)
    (l/with-style {:fill :pink}
      (-> l/annulus
          (assoc :outer-radius 300
