@@ -65,12 +65,12 @@
     (->
      (map-indexed
       (fn [i [offset {:keys [render]}]]
-        (-> (with-meta
-              [(l/scale (assoc l/frame :width cut :height cut
-                               :base-shape (render state))
-                        (/ width cut))
-               (assoc l/rectangle :width width :height width)]
-              {:events {:key ::example-pane :index i}})
+        (-> [(-> l/frame
+                 (assoc :width cut :height cut
+                        :base-shape (render state))
+                 (l/scale (/ width cut))
+                 (l/tag ::example-pane i))
+             (assoc l/rectangle :width width :height width)]
             (l/scale sf)
             (l/translate offset)))
       (partition 2 (interleave offsets (:examples state))))
@@ -111,25 +111,22 @@
          (set-code (tx/friendlify-code c) (-> state :lemonade.core/window :height))])
       (do (system/initialise! system) []))))
 
+(def embedding-window
+  "Invisible pane used to control sub renders"
+  (-> l/rectangle
+      (assoc :width width
+             :height height
+             :style {:stroke :none
+                     :fill :none
+                     :opacity 0})
+      (l/tag ::embedding-window)))
+
 (defn handler [state]
-  ;; HACK: Holy shit is this kludgy. Dynamically swap out the rendering system
-  ;; from inside the handler callback?!?!? Seems to work for the time being...
   (if-let [c (:current state)]
     (let [{:keys [render]} (nth (:examples state) c)
           {:keys [width height]} (:lemonade.core/window state)]
-      (system/initialise!
-       (assoc system :render (fn [state]
-                               [(with-meta
-                                  (assoc l/rectangle
-                                         :width width
-                                         :height height
-                                         :style {:stroke :none
-                                                 :fill :none
-                                                 :opacity 0})
-                                  {:events {:key ::embedding-window}})
-                                ((sub-render render) state)])))
-      ;; Return empty shape.
-      [])
+      [embedding-window
+       ((sub-render render) state)])
     (l/translate (panes state) [0 600])))
 
 (defn nav!
@@ -139,47 +136,53 @@
    (system/initialise! system)
    nil))
 
+(defn subscribe [a b])
+(defn lookup-shapes [key])
+
+(def panel-click-handler
+  (subscribe [:lemonade.events/left-click]
+             (fn [{:keys [location]}]
+               (let [panes (lookup-shapes ::example-pane)
+                     in (filter #(geo/contains? % location) panes)]
+                 (when (seq panes)
+                   (let [pane (first panes)
+                         index (l/get-tag-data pane ::example-pane)]
+                     {:mutation [assoc :current index]}))))))
+
 (def event-map
-  {::example-pane
-   (merge hlei/handlers
-          #:lemonade.events
-          {:left-click (fn [_ _ shape]
-                         {:mutation [assoc :current (-> shape
-                                                        meta
-                                                        :events
-                                                        :index)]})})
-   ::introspectable
-   (merge hlei/handlers
-          {:lemonade.events/hover (fn [{:keys [location]} state shape]
-                                    {:mutation
-                                     [assoc ::code-hover
-                                      (geo/retree (geo/effected-branches
-                                                   location shape))]})})
+  #:lemonade.events
+  {:left-click (fn [_ _ shape]
+                 {:mutation [assoc :current (-> shape
+                                                meta
+                                                :events
+                                                :index)]})
+   :lemonade.events/hover (fn [{:keys [location]} state shape]
+                            {:mutation
+                             [assoc ::code-hover
+                              (geo/retree (geo/effected-branches
+                                           location shape))]})
 
-   ::window/window
-   (merge hlei/handlers window/window-events)
-
-   ::embedding-window
+   ::ebedding-window
    (merge hlei/handlers
           {:lemonade.events/left-click (fn [_ _ _]
-                                         {:mutation [dissoc :current]})})})
+                                         {:mutation [dissoc :current]})})
 
+   :basic.core/poly
+   (merge hlei/handlers
+          {:lemonade.events/mouse-move (fn [& args] (println args))})})
 
 (def system
   {:host           host
    :size           :fullscreen
    :app-db         app-state
-   :render         basic.core/ex
+   :render         handler #_basic.core/ex
    :event-handlers event-map})
 
-(defn data-init! []
-  (let [dl      (fetch/demo-list)
-        db-mods (->> dl (map :app-db) (remove nil?) (map deref) (apply merge))]
-    (swap! app-state (fn [db] (merge db-mods db {:examples dl})))))
-
 (defn on-reload []
-  (system/initialise! system)
-  (data-init!))
+  (swap! app-state assoc :examples (fetch/demo-list))
+  (system/initialise! system))
 
 (defn ^:export init []
   (on-reload))
+
+(defonce tester (atom nil))
