@@ -1,76 +1,26 @@
 (ns expanse.core
-  #?@(:clj
-       [(:require
-         [clojure.pprint :refer [pprint]]
-         [clojure.string :as string]
-         [expanse.fetch :as fetch]
-         [lemonade.core :as l]
-         [lemonade.events.hlei :as hlei]
-         [lemonade.geometry :as geo]
-         [lemonade.hosts :as hosts]
-         [lemonade.math :as math]
-         [lemonade.system :as system]
-         [lemonade.transformation :as tx]
-         [lemonade.window :as window])]
-       :cljs
-       [(:require
-         [cljs.pprint :refer [pprint]]
-         [clojure.string :as string]
-         [expanse.fetch :as fetch]
-         [lemonade.events.hlei :as hlei]
-         [lemonade.core :as l]
-         [lemonade.geometry :as geo]
-         [lemonade.hosts :as hosts]
-         [lemonade.math :as math]
-         [lemonade.system :as system]
-         [lemonade.transformation :as tx]
-         [lemonade.window :as window])]))
+  (:require [clojure.string :as string]
+            [expanse.fetch :as fetch]
+            [lemonade.core :as l]
+            [lemonade.events.hlei :as hlei]
+            [lemonade.geometry :as geo]
+            [lemonade.math :as math]
+            [lemonade.spray :as can]
+            [lemonade.system :as system]
+            [lemonade.transformation :as tx]
+            [lemonade.window :as window]))
 
 #?(:cljs (enable-console-print!))
 
 (defonce app-state (atom {:examples [] ::scroll 500}))
-
-(def host hosts/default-host)
 
 (defn frames [n dim]
   (map (fn [i]
          [(* dim (mod i n)) (* -1 dim (quot i n))])
        (range)))
 
-;; REVIEW: I get the feeling that I should encourage anyone creating shapes to
-;; use subscribed-shape as far down the tree as possible. The reason being that
-;; if you make the subscription high up and pass bits down as parameters, then
-;; we can't efficiently memoise the functions within your function, whereas
-;; every call to subscribe can be trivially wrapped up in the signal graph and
-;; be called only when absolutely necessary.
-;;
-;; The problem here is that this feels a lot like dependency injection or action
-;; at a distance.
-;;
-;; On the one hand queries are made closest to the point of use and logic
-;; doesn't need to be added to parcel up data and pass it down to children.
-;;
-;; On the other hand it means that for optimal efficiency you'll be encouraged
-;; to possibly query the same thing over and over rather than passing it
-;; down. This could encourage architectures where every single VO is a
-;; subscription, most of which are redundant. This is analogous to my complaints
-;; against Angular.
-;;
-;; However, you're not forced to use subscriptions. So when it makes sense to
-;; pass down a value, then you should. After all, if a value is queried in a
-;; parent, and then again in a child, then both need to rerender if the parent
-;; does, so you may as well use a function. So now style guides are
-;; important. That feels like a lack of design clarity.
-;;
-;; This isn't a new problem. Every React wrapper has it to some degree. Do I
-;; query here, or query above and pass down? Maybe it's not unreasonable to
-;; remain agnostic here and consider the choice design aesthetic.
-(defn subscribed-shape
-  {:style/indent [1 :form]}
-  [subscriptions render-fn])
-
 (def subimage-panels
-  (subscribed-shape [:lemonade.core/window :examples]
+  (can/subscribed-shape [:lemonade.core/window :examples]
     (fn [window examples]
       (let [{:keys [height width]} window
             frame-width 500
@@ -94,7 +44,7 @@
          (l/translate [(/ (- width (* n dim)) 2) 0]))))))
 
 (defn scrolled [img]
-  (subscribed-shape [::scroll]
+  (can/subscribed-shape [::scroll]
     (fn [scroll]
       (l/translate img scroll))))
 
@@ -113,7 +63,7 @@
   ;; case. Like an LRU or otherwise limited cache
   (memoize
    (fn [code]
-     (string/split-lines (with-out-str (pprint code))))))
+     (string/split-lines code))))
 
 (defn set-code [code h]
   (let [lines       (take (quot h 16) (format-code code))
@@ -130,7 +80,7 @@
                     lines))]))
 
 (defn sub-render [current]
-  (subscribed-shape [:lemonade.core/window :examples ::code-hover]
+  (can/subscribed-shape [:lemonade.core/window :examples ::code-hover]
     (fn [{:keys [height]} examples hover]
       (let [render (get examples current [])
             w (l/translate (window/wrap-windowing render) [630 0])
@@ -141,7 +91,7 @@
 
 (def embedding-window
   "Invisible pane used to control sub renders"
-  (subscribed-shape [:lemonade.core/window]
+  (can/subscribed-shape [:lemonade.core/window]
     (fn [{:keys [width height]}]
       (-> l/rectangle
           (assoc :width width
@@ -152,7 +102,7 @@
           (l/tag ::embedding-window)))))
 
 (def handler
-  (subscribed-shape [:current]
+  (can/subscribed-shape [:current]
     (fn [c]
       (if c
         [embedding-window
@@ -166,18 +116,17 @@
    (system/initialise! system)
    nil))
 
-(defn subscribe [a b])
 (defn lookup-shapes [key])
 
 (def panel-click-handler
-  (subscribe [:lemonade.events/left-click]
-             (fn [{:keys [location]}]
-               (let [panes (lookup-shapes ::example-pane)
-                     in (filter #(geo/contains? % location) panes)]
-                 (when (seq panes)
-                   (let [pane (first panes)
-                         index (l/get-tag-data pane ::example-pane)]
-                     {:mutation [assoc :current index]}))))))
+  (can/subscribed-shape [:lemonade.events/left-click]
+    (fn [{:keys [location]}]
+      (let [panes (lookup-shapes ::example-pane)
+            in (filter #(geo/contains? % location) panes)]
+        (when (seq panes)
+          (let [pane (first panes)
+                index (l/get-tag-data pane ::example-pane)]
+            {:mutation [assoc :current index]}))))))
 
 (def event-map
   #:lemonade.events
@@ -202,8 +151,7 @@
           {:lemonade.events/mouse-move (fn [& args] (println args))})})
 
 (def system
-  {:host           host
-   :size           :fullscreen
+  {:size           :fullscreen
    :app-db         app-state
    :render         handler #_basic.core/ex
    :event-handlers event-map})
