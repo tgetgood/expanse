@@ -16,7 +16,7 @@
    pixel.core/init
    chase.core/init
    basic.core/init
-   infinite.core/init])
+   #_infinite.core/init])
 
 (defn exec [x] (x))
 

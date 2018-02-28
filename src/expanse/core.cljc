@@ -20,7 +20,7 @@
        (range)))
 
 (def subimage-panels
-  (can/subscribed-shape [:lemonade.core/window :examples]
+  (can/subscribed-shape [:lemonade.core/window (fn [s] (map :render (:examples s)))]
     (fn [window examples]
       (let [{:keys [height width]} window
             frame-width 500
@@ -31,10 +31,10 @@
             sf (/ dim width)]
         (->
          (map-indexed
-          (fn [i [offset sub-render]]
+          (fn [i [offset render]]
             (-> [(-> l/frame
                      (assoc :width cut :height cut
-                            :base-shape sub-render)
+                            :base-shape render)
                      (l/scale (/ width cut))
                      (l/tag ::example-pane i))
                  (assoc l/rectangle :width width :height width)]
@@ -46,7 +46,7 @@
 (defn scrolled [img]
   (can/subscribed-shape [::scroll]
     (fn [scroll]
-      (l/translate img scroll))))
+      (l/translate img [0 scroll]))))
 
 (declare system)
 
