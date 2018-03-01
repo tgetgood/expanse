@@ -123,17 +123,18 @@
 
 (def event-map
   #:lemonade.events
-  {:left-mouse-down [(fn [e]
-                       (prn e)
-                       #_{:mutation [assoc :current (-> shape
-                                                        meta
-                                                        :events
-                                                        :index)]})]
-   :lemonade.events/hover [(fn [{:keys [location]} state shape]
-                             {:mutation
-                              [assoc ::code-hover
-                               (geo/retree (geo/effected-branches
-                                            location shape))]})]})
+  {:left-mouse-down (fn [e db]
+                      (let [shape (spray/find ::example-pane location)]
+                        {:swap! [assoc :current (-> shape
+                                                    meta
+                                                    :events
+                                                    :index)]}))
+   :lemonade.events/hover (fn [{:keys [location]} db]
+                            (let [shape (spray/find ::any location)]
+                              {:swap!
+                               [assoc ::code-hover
+                                (geo/retree (geo/effected-branches
+                                             location shape))]}))})
 
 (def system
   {:size           :fullscreen
