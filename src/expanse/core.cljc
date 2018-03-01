@@ -22,7 +22,7 @@
 (def subimage-panels
   (can/subscribed-shape [:lemonade.core/window (fn [s] (map :render (:examples s)))]
     (fn [window examples]
-      (let [{:keys [height width]} window
+      (let [{:keys [width]} window
             frame-width 500
             cut 1300
             n (max 1 (quot width frame-width))
@@ -54,16 +54,9 @@
   (assoc l/rectangle :style {:fill "#E1E1E1"
                              :stroke "rgba(0,0,0,0)"}))
 
-(def format-code
-  ;;FIXME: Faster, but massive memory strain.
-  ;; I think we need a way to create signaly atoms on the fly. Reactions that
-  ;; can be passed.
-  ;; REVIEW: This is just one use case for a potentially horrifyingly ugly
-  ;; kludge. Take your time. There's probably a simpler solution to this edge
-  ;; case. Like an LRU or otherwise limited cache
-  (memoize
-   (fn [code]
-     (string/split-lines code))))
+(defn format-code
+  [code]
+  (string/split-lines code))
 
 (defn set-code [code h]
   (let [lines       (take (quot h 16) (format-code code))
@@ -130,25 +123,17 @@
 
 (def event-map
   #:lemonade.events
-  {:left-click (fn [_ _ shape]
-                 {:mutation [assoc :current (-> shape
-                                                meta
-                                                :events
-                                                :index)]})
-   :lemonade.events/hover (fn [{:keys [location]} state shape]
-                            {:mutation
-                             [assoc ::code-hover
-                              (geo/retree (geo/effected-branches
-                                           location shape))]})
-
-   ::ebedding-window
-   (merge hlei/handlers
-          {:lemonade.events/left-click (fn [_ _ _]
-                                         {:mutation [dissoc :current]})})
-
-   :basic.core/poly
-   (merge hlei/handlers
-          {:lemonade.events/mouse-move (fn [& args] (println args))})})
+  {:left-mouse-down [(fn [e]
+                       (prn e)
+                       #_{:mutation [assoc :current (-> shape
+                                                        meta
+                                                        :events
+                                                        :index)]})]
+   :lemonade.events/hover [(fn [{:keys [location]} state shape]
+                             {:mutation
+                              [assoc ::code-hover
+                               (geo/retree (geo/effected-branches
+                                            location shape))]})]})
 
 (def system
   {:size           :fullscreen
