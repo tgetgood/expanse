@@ -1,7 +1,7 @@
 (ns elections-demo.core
-  (:require [lemonade.core :as core :refer [line scale translate with-style]]
-            [lemonade.math :as math]
-            [lemonade.system :as system]))
+  (:require [ubik.core :as core :refer [line scale translate with-style]]
+            [ubik.math :as math]
+            [ubik.system :as system]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Example Data

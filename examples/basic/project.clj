@@ -6,7 +6,7 @@
 
   :min-lein-version "2.7.1"
 
-  :dependencies [[macroexpanse/lemonade "0.2.0"]
+  :dependencies [[macroexpanse/ubik "0.2.0"]
                  [org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.9.946"]]
 

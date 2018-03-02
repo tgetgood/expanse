@@ -1,12 +1,12 @@
 #+TITLE: Macro Expanse
 
-Browser (and eventually editor) for [[https://github.com/tgetgood/lemonade][lemonade]] example projects.
+Browser (and eventually editor) for [[https://github.com/tgetgood/ubik][lemonade]] example projects.
 
 [[https://tgetgood.github.io/expanse/resources/public/index.html][Try it in action]]
 
 * Overview
 	Expanse is to be a collection of code examples demonstrating what is currently
-	called lemonade.
+	called ubik.
 
 	The plan is to compile the example code directly in the browser and embed an
 	editor in the page. However, until that comes to pass you'll need to clone
@@ -42,7 +42,7 @@ Browser (and eventually editor) for [[https://github.com/tgetgood/lemonade][lemo
 	 To create your own example project use the lein template
 
 	 #+BEGIN_SRC sh
-	 $ lein new lemonade NAME
+	 $ lein new ubik NAME
 	 #+END_SRC
 
 	 Start figwheel in your new project folder and follow the instructions from

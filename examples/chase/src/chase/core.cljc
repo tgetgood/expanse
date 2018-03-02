@@ -1,10 +1,10 @@
 (ns chase.core
   "Simple animation compositing example"
   ;; TODO: animations.
-  (:require [lemonade.core :as l]
+  (:require [ubik.core :as l]
             [elections-demo.core :refer [annular-wedge]]
             [pixel.core :refer [blinky]]
-            [lemonade.system :as system]))
+            [ubik.system :as system]))
 
 #?(:cljs (enable-console-print!))
 

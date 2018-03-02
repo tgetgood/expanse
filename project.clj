@@ -1,5 +1,5 @@
 (defproject expanse "0.1.0"
-  :description "Demo browser for Lemonade ecosystem."
+  :description "Demo browser for Ubik ecosystem."
   :url "https://github.com/tgetgood/expanse"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
@@ -23,7 +23,7 @@
   {:builds
    [{:id           "dev"
      :source-paths ["src"
-                    "../lemonade/src"
+                    "../ubik/src"
                     "examples/elections-demo/src"
                     "examples/basic/src"
                     "examples/chase/src"
@@ -57,7 +57,7 @@
                     :pretty-print   false}}]}
 
   :profiles
-  {:prod {:dependencies [[macroexpanse/lemonade "0.3.0"]]}
+  {:prod {:dependencies [[macroexpanse/ubik "0.3.0"]]}
    :dev  {:dependencies  [[binaryage/devtools "0.9.9"]
                           [quil "2.6.0" :exclusions [[org.clojure/clojure]]]
                           [org.clojure/spec.alpha "0.1.134"]
@@ -70,7 +70,7 @@
           ;; need to add dev source path here to get user.clj loaded
           :source-paths  ["src"
                           "dev"
-                          "../lemonade/src"
+                          "../ubik/src"
                           "examples/chase/src"
                           "examples/pixel/src"
                           "examples/basic/src"

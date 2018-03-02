@@ -1,9 +1,9 @@
 (ns infinite.core
   (:require
-   [lemonade.core :as l]
-   [lemonade.math :as math]
-   [lemonade.system :as system]
-   [lemonade.window :as window]))
+   [ubik.core :as l]
+   [ubik.math :as math]
+   [ubik.system :as system]
+   [ubik.window :as window]))
 
 #?(:cljs (enable-console-print!))
 
@@ -42,7 +42,7 @@
 
 
 (defn example [state]
-  (if-let [window (:lemonade.core/window state)]
+  (if-let [window (:ubik.core/window state)]
     (rings window)
     []))
 

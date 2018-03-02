@@ -42,7 +42,7 @@
                     :pretty-print   false}}]}
 
   :profiles
-  {:prod {:dependencies [[macroexpanse/lemonade "0.1.0"]]}
+  {:prod {:dependencies [[macroexpanse/ubik "0.1.0"]]}
    :dev  {:dependencies  [[binaryage/devtools "0.9.4"]
                           [org.clojure/spec.alpha "0.1.134"]
                           [org.clojure/tools.namespace "0.2.11"]
@@ -52,7 +52,7 @@
                           [com.cemerick/piggieback "0.2.2"]
                           [org.clojure/test.check "0.9.0"]]
           ;; need to add dev source path here to get user.clj loaded
-          :source-paths  ["src" "dev" "../lemonade/src"]
+          :source-paths  ["src" "dev" "../ubik/src"]
 
           :repl-options  {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
           ;; need to add the compliled assets to the :clean-targets
