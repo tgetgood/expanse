@@ -3,7 +3,7 @@
             chase.core
             elections-demo.core
             infinite.core
-            [ubik.system :as system]
+            [ubik.interactive.system :as system]
             pixel.core))
 
 (def demo-nses
@@ -21,7 +21,7 @@
 (defn exec [x] (x))
 
 (defn demo-list []
-  (binding [ubik.system/initialise! identity]
+  (binding [system/initialise! identity]
     (->> demo-nses
          (mapv exec)
          (map system/with-defaults))))

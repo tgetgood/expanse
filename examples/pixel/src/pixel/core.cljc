@@ -1,7 +1,7 @@
 (ns pixel.core
   "Create pixel sprites and then manipulate them as if they were vector images."
   (:require [ubik.core :as l]
-            [ubik.system :as system]))
+            [ubik.interactive.system :as system]))
 
 #?(:cljs (enable-console-print!))
 

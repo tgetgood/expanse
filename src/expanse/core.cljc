@@ -2,16 +2,14 @@
   (:require [clojure.string :as string]
             [expanse.fetch :as fetch]
             [ubik.core :as l]
-            [ubik.events.hlei :as hlei]
             [ubik.geometry :as geo]
             [ubik.math :as math]
-            [ubik.spray :as spray]
-            [ubik.system :as system]
+            [ubik.interactive.core :as spray]
+            [ubik.interactive.system :as system]
             [ubik.transformation :as tx]
-            [ubik.window :as window]))
+            [ubik.hosts :as hosts]))
 
 #?(:cljs (enable-console-print!))
-
 
 (defonce app-state (atom {:examples [] ::scroll 500}))
 
@@ -118,21 +116,28 @@
   {:left-mouse-down (fn [{:keys [location]} db]
                       {:swap! [assoc :current
                                (spray/lookup-tag ::example-pane location)]})
+
    :hover (fn [{:keys [location]} db]
-                            (let [shape (spray/find ::any location)]
-                              {:swap!
-                               [assoc ::code-hover
-                                (geo/retree (geo/effected-branches
-                                             location shape))]}))
+            (let [shape (spray/find ::any location)]
+              {:swap!
+               [assoc ::code-hover
+                (geo/retree (geo/effected-branches
+                             location shape))]}))
+
    :wheel (fn [{:keys [location dy]} db]
             (let [scroll (+ (::scroll db) dy)]
               {:swap! [assoc ::scroll scroll]}))})
 
+(def host #?(:cljs (hosts/html-canvas {})
+             :clj (hosts/quil {})))
+
 (def system
-  {:size           :fullscreen
-   :app-db         app-state
-   :render         handler #_basic.core/ex
-   :event-handlers event-map})
+  {:app-db          app-state
+   :render          handler
+   :host            host
+   :subscriptions   {}
+   :event-handlers  event-map
+   :effect-handlers {}})
 
 (defn on-reload []
   (swap! app-state assoc :examples (fetch/demo-list))

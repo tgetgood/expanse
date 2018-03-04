@@ -1,6 +1,6 @@
 (ns basic.core
   (:require [ubik.core :as l]
-            [ubik.system :as system]))
+            [ubik.interactive.system :as system]))
 
 #?(:cljs (enable-console-print!))
 

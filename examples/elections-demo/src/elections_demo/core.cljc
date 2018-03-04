@@ -1,7 +1,7 @@
 (ns elections-demo.core
   (:require [ubik.core :as core :refer [line scale translate with-style]]
             [ubik.math :as math]
-            [ubik.system :as system]))
+            [ubik.interactive.system :as system]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;; Example Data

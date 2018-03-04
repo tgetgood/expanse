@@ -2,8 +2,8 @@
   (:require
    [ubik.core :as l]
    [ubik.math :as math]
-   [ubik.system :as system]
-   [ubik.window :as window]))
+   [ubik.interactive.system :as system]
+   [ubik.interactive.window :as window]))
 
 #?(:cljs (enable-console-print!))
 
