@@ -1,4 +1,5 @@
 (ns expanse.core
+  #?(:cljs (:require-macros [ubik.interactive.core :as spray]))
   (:require [clojure.string :as string]
             [expanse.fetch :as fetch]
             [ubik.core :as l]
@@ -146,4 +147,16 @@
 (defn ^:export init []
   (on-reload))
 
+;;;;; Test code.
+
 (defonce tester (atom nil))
+
+(spray/defsubs ex
+
+  {:current (do (println "yeaik") (:current (spray/sub :db)))
+   :examples (:examples (spray/sub :db))
+   :view (do (println "no cache")
+             (nth (spray/sub :examples) (spray/sub :current)))
+   :window ^:no-cache (do (println "win") (:window (spray/sub :db)))
+   :window-height (:height (spray/sub :window))
+   })
